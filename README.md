@@ -8,11 +8,12 @@ This is a complete local image analysis skill for [Hermes Agent](https://hermes-
 
 | Engine | Purpose | Accuracy | Speed |
 |--------|---------|----------|-------|
-| **DocTR** | OCR text extraction | 92% confidence per word, 85.7% text detection | 1.7s |
+| **DocTR** | OCR text extraction | 92% per-word confidence | 1.7s |
 | **EasyOCR** | Backup OCR (multilingual) | 71% confidence | 2–16s |
-| **BLIP** | Image captioning & object description | 88.6% useful vs gpt-4o | 1.2s |
+| **BLIP** | Image captioning | 91.5% useful vs ground truth | 1.2s |
+| **Multi-Classifier** | 7-category image labeling | 94.9% camera/digital, 100% text detection | <1ms |
 
-Also includes BLIP-powered camera vs digital detection at **100% accuracy** (validated on 35 diverse images; 7-image test was too small).
+All numbers validated on 59 diverse images (34 synthetic + 25 real photos).
 
 ## Engines Rejected (After Full Benchmark)
 

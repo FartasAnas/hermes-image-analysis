@@ -203,3 +203,66 @@ DocTR detected text where gpt-4o said there was none in 3 cases (false positives
 | **Camera/Digital** | Type classification | 100% (7/7) | **100%** (35/35) ✅ validated at scale |
 
 **Conclusion: Pipeline validated at scale.** BLIP-base + DocTR remains the optimal local-only stack. Camera/digital detection now uses a robust two-tier classifier that handles abstract/synthetic images correctly.
+
+---
+
+## Phase 8: Multi-Category Classification + 59-Image Benchmark (July 2026)
+
+**Goal:** Go beyond camera/digital — build a rich multi-category classifier covering 8 dimensions (source, setting, environment, subject, composition, color, text) with BLIP-optimized keywords.
+
+**Dataset:** 59 images — 34 synthetic (known ground truth for all categories) + 25 real photos (Lorem Picsum with OpenRouter descriptions).
+
+### Camera vs Digital
+
+| Version | Accuracy | Notes |
+|---------|----------|-------|
+| v1 (7 images) | 100% | Too few images |
+| v2 (35 images) | 100% | Expanded keywords, word-boundary fix |
+| **v3 (59 images)** | **94.9%** (56/59) | **3 unfixable misses** — BLIP describes synthetic photos as real |
+
+The 3 unfixable misses: BLIP describes a synthetic green field as "a green field with a blue sky", a synthetic house as "a red barn with a brown roof", and a synthetic flower as "a yellow flower with a brown center". These images were designed to look like real photos — BLIP correctly identifies what they look like. No keyword system can fix this without a better vision model.
+
+### Multi-Category Classification (34 synthetic images)
+
+| Category | Accuracy | Notes |
+|----------|----------|-------|
+| 📷 **Source** (photo/digital/painting/diagram/screenshot) | **91.2%** | 31/34 synthetic correctly classified as non-photo |
+| 📝 **Text Detection** (has_text) | **100%** | 12/12 text images detected |
+| 🎨 **Color** (warm/cool/vibrant/dark/bright/monochrome) | **85.7%** | 18/21 correct |
+| 🏷️ **Avg labels/image** | 2.6 | BLIP provides enough detail for multiple categories |
+
+### BLIP Caption Quality
+
+| Rating | Count | % |
+|--------|-------|---|
+| Useful (≥10% word overlap with ground truth) | 54/59 | **91.5%** |
+| Avg word overlap | 23.2% | BLIP is concise vs human descriptions |
+
+### The Multi-Category Classifier
+
+Built in `multi_classifier.py` — **380+ keywords** across 8 dimensions, all tuned to BLIP-base's actual vocabulary. Categories cover:
+
+1. **Source**: photo, digital_abstract, painting, illustration, drawing, diagram, screenshot, map
+2. **Setting**: indoor, outdoor, night, sunset, daytime
+3. **Environment**: urban, rural, natural, architectural, coastal, mountainous
+4. **Subject**: person, animal, bird, insect, fish, plant, landscape, building, vehicle, food, text_document
+5. **Composition**: closeup, panorama, aerial_view
+6. **Color**: monochrome, vibrant, dark, bright, warm_tones, cool_tones
+7. **Text**: has_text
+
+Key design decisions:
+- Word-boundary matching prevents substring false positives
+- Multi-word phrase matching for context-sensitive keywords
+- Derived rules: building → architectural, food → indoor
+- Digital detection covers gradients, patterns, UI elements, charts, menus
+
+### Updated Final Accuracy Summary
+
+| Engine | Metric | Accuracy |
+|--------|--------|----------|
+| **Camera/Digital** | Type classification | **94.9%** (56/59) |
+| **Source** | Multi-category source | **91.2%** (31/34) |
+| **Text Detection** | has_text | **100%** (12/12) |
+| **Color** | Palette classification | **85.7%** (18/21) |
+| **BLIP Caption** | Useful vs ground truth | **91.5%** (54/59) |
+| **DocTR OCR** | Text presence detection | 85.7% (from Phase 7) |
