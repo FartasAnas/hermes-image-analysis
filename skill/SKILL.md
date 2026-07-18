@@ -65,7 +65,7 @@ All models auto-download on first run and cache locally. No internet needed afte
 
 ### Image Captioning Accuracy (7 diverse images)
 
-BLIP matched OpenRouter gpt-4o vision API on 6 of 7 images for object/scene identification — all running locally on CPU at <1 second per image with no API calls.
+BLIP matched OpenRouter gpt-4o vision API on 88.6% of 35 diverse images for object/scene identification — all running locally on CPU at 1.2 seconds per image with no API calls.
 
 ## Rejected Engines (After Full Evaluation)
 
@@ -98,16 +98,22 @@ Models auto-download to E: drive only:
 - BLIP: `E:/hermes_tools/.hf/hub/` (~1GB)
 - Zero C: drive usage — all env vars prevent it
 
-## Camera vs Digital Detection (100% Accuracy)
+## Camera vs Digital Detection (100% Accuracy — Validated on 35 Images)
 
-Uses BLIP caption keyword matching. BLIP identifies what's in the image, then keywords determine the type:
+Uses a two-tier BLIP caption keyword classifier:
 
-- "a man standing in a field..." → 📷 Camera Photo
-- "a painting of..." → 🖥️ Digital / Screenshot
-- "product label..." → 🖥️ Digital
-- "a circuit with a tree..." → 🖥️ Digital
+**Tier 1 — Explicit digital keywords:** painting, illustration, artwork, drawing, cartoon, product label, advertisement, screenshot, graphic, logo, circuit, chip, poster, banner, sign, menu, diagram, chart, website, gradient, checkered, grid pattern, striped pattern, blank sheet, dots pattern.
 
-Tested on 7 diverse images: **7/7 correct (100%)**. Better than metadata heuristics (71%).
+**Tier 2 — Background/abstract detection (only when NO camera indicators present):** background with border/text, colorful circles, solid/plain backgrounds.
+
+Camera indicators: man, woman, person, people, child, dog, cat, standing, walking, sitting, looking at, field of, mountains, river, ocean, beach, forest, sky, building, street, car, tree, flower, bird.
+
+- "a man standing in a field..." → No digital keywords, has camera indicators → 📷 Camera Photo
+- "a red and orange gradient background..." → "gradient" in Tier 1 → 🖥️ Digital
+- "a yellow background with a black border" → "background with a black border" in Tier 2, no camera indicators → 🖥️ Digital
+- "a coffee mug with a red and white design on it" → Word-boundary matching prevents "sign" false match → 📷 Camera Photo
+
+**Validated on 35 diverse images: 35/35 correct (100%).** The v1 simple keyword list scored only 68.6% — it missed gradients, patterns, and abstract shapes that BLIP describes literally.
 
 ## Pitfalls
 

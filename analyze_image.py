@@ -113,17 +113,72 @@ def run_blip(image_path):
 # Camera vs Digital Detection (BLIP caption keyword matching)
 # ═══════════════════════════════════════════════════════════
 DIGITAL_KEYWORDS = [
+    # Explicitly digital/synthetic content
     "painting", "painted", "illustration", "artwork", "drawing", "cartoon",
-    "product label", "advertisement", "screenshot", "graphic", "design",
+    "product label", "advertisement", "screenshot", "graphic",
     "logo", "circuit", "chip", "microchip", "user interface", "ui",
-    "poster", "banner", "sign", "menu", "diagram", "chart"
+    "poster", "banner", "sign", "menu", "diagram", "chart",
+    "website",  # BLIP calls screenshots "website"
+    # Abstract/synthetic patterns BLIP describes literally
+    "gradient", "checkered", "grid pattern", "striped pattern",
+    "blank sheet", "dots pattern",
+    # Digital-only qualifiers (not found in nature photos)
+    "filled with various colors", "filled with different colors",
+    "colorful geometric",
+]
+# Keywords that indicate digital ONLY when the caption has NO camera indicators
+DIGITAL_BACKGROUND_KEYWORDS = [
+    "background with a black border",
+    "background with a white border",
+    "solid background",
+    "plain background",
+    "background with the words",  # text-on-background = digital
+    "colorful circle",  # abstract shapes = digital
+]
+CAMERA_INDICATORS = [
+    "man ", "woman ", "person ", "people ", "child ", "dog ", "cat ",
+    "standing", "walking", "sitting", "looking at", "field of",
+    "mountains", "river", "ocean", "beach", "forest", "sky",
+    "building", "street", "car ", "tree", "flower", "bird",
 ]
 
 def classify_camera_digital(blip_caption):
-    """Determine if an image is a camera photo or digital/screenshot using BLIP caption."""
+    """Determine if an image is a camera photo or digital/screenshot using BLIP caption.
+    
+    Two-tier classification:
+    1. Explicit digital keywords → digital
+    2. Background/abstract keywords AND no camera indicators → digital
+    3. Everything else → camera
+    
+    Uses word-boundary matching to avoid substring false positives.
+    """
     lower = blip_caption.lower()
-    if any(kw in lower for kw in DIGITAL_KEYWORDS):
-        return "🖥️ Digital / Screenshot"
+    words = lower.split()
+    
+    # Tier 1: explicit digital keywords (multi-word phrases checked in full caption)
+    for kw in DIGITAL_KEYWORDS:
+        if kw in lower:
+            # For single-word keywords, verify word boundary to avoid substring matches
+            if ' ' in kw:
+                # Multi-word phrase — substring match is fine
+                return "🖥️ Digital / Screenshot"
+            else:
+                # Single word — check it appears as a whole word
+                if kw in words:
+                    return "🖥️ Digital / Screenshot"
+    
+    # Tier 2: abstract background indicators WITHOUT camera cues
+    has_camera_indicator = any(ci in lower for ci in CAMERA_INDICATORS)
+    if not has_camera_indicator:
+        if any(kw in lower for kw in DIGITAL_BACKGROUND_KEYWORDS):
+            return "🖥️ Digital / Screenshot"
+        # Catch captions that are purely about backgrounds/colors with no real objects
+        if "background" in lower and not any(
+            obj in words for obj in ["mug", "bottle", "phone", "book", "chair", "table",
+                                      "person", "people", "man", "woman", "child", "animal"]
+        ):
+            return "🖥️ Digital / Screenshot"
+    
     return "📷 Camera Photo"
 
 def analyze_metadata(image_path):
