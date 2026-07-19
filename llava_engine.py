@@ -25,16 +25,36 @@ class LLaVAEngine:
             load_in_4bit: Use 4-bit quantization (~5GB VRAM) vs 8-bit (~8GB)
         """
         self.cache_dir = cache_dir or os.environ.get('HF_HOME', 'E:/hermes_tools/.hf')
+        # Ensure cache_dir doesn't end with /hub (HF adds that internally)
+        if self.cache_dir.endswith('/hub'):
+            self.cache_dir = self.cache_dir[:-4]
         self.load_in_4bit = load_in_4bit
         self.model = None
         self.processor = None
         self._loaded = False
     
+    def _resolve_model_path(self):
+        """Resolve the actual model path from HF cache (handles Windows symlink issues)."""
+        model_id = "llava-hf/llava-1.5-7b-hf"
+        # Try to find the snapshot in cache
+        cache_model_dir = os.path.join(self.cache_dir, "hub", 
+                                       f"models--{model_id.replace('/', '--')}")
+        refs_file = os.path.join(cache_model_dir, "refs", "main")
+        if os.path.exists(refs_file):
+            with open(refs_file) as f:
+                snapshot_hash = f.read().strip()
+            snapshot_dir = os.path.join(cache_model_dir, "snapshots", snapshot_hash)
+            if os.path.exists(snapshot_dir):
+                return snapshot_dir
+        # Fall back to model ID (will try to download)
+        return model_id
+    
     def load(self):
-        """Load the LLaVA model (downloads on first run)."""
+        """Load the LLaVA model."""
         if self._loaded:
             return
         
+        model_path = self._resolve_model_path()
         print("Loading LLaVA-1.5-7B...", end=" ", flush=True)
         t0 = time.time()
         
@@ -49,26 +69,23 @@ class LLaVAEngine:
                 bnb_4bit_quant_type="nf4",
             )
             self.model = LlavaForConditionalGeneration.from_pretrained(
-                "llava-hf/llava-1.5-7b-hf",
+                model_path,
                 quantization_config=quant_config,
                 device_map="auto",
                 torch_dtype=torch.float16,
-                cache_dir=self.cache_dir,
-                local_files_only=False,
+                local_files_only=True,
             )
         else:
             self.model = LlavaForConditionalGeneration.from_pretrained(
-                "llava-hf/llava-1.5-7b-hf",
+                model_path,
                 device_map="auto",
                 torch_dtype=torch.float16,
-                cache_dir=self.cache_dir,
-                local_files_only=False,
+                local_files_only=True,
             )
         
         self.processor = AutoProcessor.from_pretrained(
-            "llava-hf/llava-1.5-7b-hf",
-            cache_dir=self.cache_dir,
-            local_files_only=False,
+            model_path,
+            local_files_only=True,
         )
         
         self._loaded = True
