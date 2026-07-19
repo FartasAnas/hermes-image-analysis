@@ -67,6 +67,17 @@ def classify_image(blip_caption):
         if any(s in lower for s in physical_computer_signals):
             results["source"] = ["photo"]
     
+    # If classified as photo but clearly describes space/network/art → flip to digital
+    space_digital_signals = [
+        "of the earth", "of the universe", "in the universe",
+        "network of", "connected lines", "nodes and",
+        "illustration of", "digital art", "digital illustration",
+        "concept art", "render of", "rendering of",
+    ]
+    if "photo" in source_final:
+        if any(s in lower for s in space_digital_signals):
+            results["source"] = ["digital_abstract"]
+    
     # Deduplicate
     for dim in results:
         results[dim] = sorted(set(results[dim]))
@@ -86,7 +97,7 @@ def _apply_derived_rules(results, lower, words):
             "field of", "mountains", "river", "ocean", "beach",
             "forest", "sky with", "street", "car ", "tree",
             "flower", "bird", "dog ", "cat ", "building",
-            "desktop computer", "laptop computer",  # photos of computers
+            "desktop computer", "laptop computer",
         ])
         
         digital_signals = [
@@ -97,12 +108,14 @@ def _apply_derived_rules(results, lower, words):
             "system error", "price for",
             "two circles", "one red and one blue",
             "circles with", "overlapping",
-            # Only digital when in screen context
             "screenshote", "screen with", "screen showing",
             "app interface", "user interface", "ui ",
-            # Maze/puzzle patterns (always digital/synthetic)
             "maze", "circular maze", "labyrinth", "puzzle",
             "with a white background", "with a black background",
+            # Space/digital art — often digitally created
+            "of the earth", "of the universe", "in the universe",
+            "network of", "connected lines", "nodes and",
+            "lines and dots", "globe with", "planet with",
         ]
         has_digital = any(ds in lower for ds in digital_signals)
         
