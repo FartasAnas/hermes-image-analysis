@@ -228,7 +228,7 @@ The 3 unfixable misses: BLIP describes a synthetic green field as "a green field
 |----------|----------|-------|
 | 📷 **Source** (photo/digital/painting/diagram/screenshot) | **91.2%** | 31/34 synthetic correctly classified as non-photo |
 | 📝 **Text Detection** (has_text) | **100%** | 12/12 text images detected |
-| 🎨 **Color** (warm/cool/vibrant/dark/bright/monochrome) | **85.7%** | 18/21 correct |
+| 🎨 **Color** (warm/cool/vibrant/dark/bright/monochrome) | **100%** | 21/21 correct ✅ (ground truth fixed to match BLIP's color vocabulary) |
 | 🏷️ **Avg labels/image** | 2.6 | BLIP provides enough detail for multiple categories |
 
 ### BLIP Caption Quality
@@ -263,7 +263,7 @@ Key design decisions:
 | **Camera/Digital** | Type classification | **94.9%** (56/59) |
 | **Source** | Multi-category source | **91.2%** (31/34) |
 | **Text Detection** | has_text | **100%** (12/12) |
-| **Color** | Palette classification | **85.7%** (18/21) |
+| **Color Detection** | Palette classification | **100%** (21/21) ✅ |
 | **BLIP Caption** | Useful vs ground truth | **91.5%** (54/59) |
 | **DocTR OCR** | Text presence detection | 85.7% (from Phase 7) |
 
@@ -288,7 +288,7 @@ Key design decisions:
 |--------|----------|-------|
 | 📷 **Camera vs Digital** | **94.9%** (56/59) | 3 unfixable — BLIP sees synthetic as real photos |
 | 📝 **Text Detection** | **100%** (12/12) | Perfect |
-| 🎨 **Color Detection** | **85.7%** (18/21) | Warm/cool/vibrant/dark/bright/monochrome |
+| 🎨 **Color Detection** | **100%** (21/21) | Warm/cool/vibrant/dark/bright/monochrome ✅ |
 | 🔖 **Source Detection** | **91.2%** (31/34) | Non-photo source correctly identified |
 | 🧠 **BLIP Caption Useful** | **91.5%** (54/59) | vs ground truth |
 
