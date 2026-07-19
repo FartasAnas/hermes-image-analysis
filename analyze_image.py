@@ -114,10 +114,44 @@ def _load_blip():
         _blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
     return _blip_processor, _blip_model
 
+def _load_image_safely(image_path):
+    """Load image, handling LA/RGBA alpha channels properly.
+    
+    For LA/RGBA images, the actual visual content may be in the alpha channel.
+    We composite onto a white background to preserve what the human eye sees.
+    """
+    from PIL import Image
+    img = Image.open(image_path)
+    
+    if img.mode in ('LA', 'PA'):
+        # Luminance+Alpha: alpha channel IS the visible content
+        # Composite alpha onto white background
+        background = Image.new('L', img.size, 255)
+        alpha = img.getchannel('A')
+        background.paste(alpha, mask=alpha)
+        return background.convert('RGB')
+    
+    elif img.mode in ('RGBA', 'RGBa'):
+        # Composite onto white background to preserve transparency
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'RGBA':
+            background.paste(img, mask=img.split()[3])
+        else:
+            background.paste(img)
+        return background
+    
+    elif img.mode == 'P':
+        # Palette mode — convert to RGBA first
+        return img.convert('RGBA').convert('RGB')
+    
+    else:
+        return img.convert('RGB')
+
+
 def run_blip(image_path):
     processor, model = _load_blip()
     t0 = time.time()
-    img = Image.open(image_path).convert("RGB")
+    img = _load_image_safely(image_path)
     inputs = processor(img, return_tensors="pt")
     out = model.generate(**inputs, max_new_tokens=100)
     caption = processor.decode(out[0], skip_special_tokens=True)
@@ -180,7 +214,7 @@ def classify_camera_digital(blip_caption):
 def analyze_metadata(image_path):
     from PIL import Image
     import os
-    img = Image.open(image_path)
+    img = _load_image_safely(image_path)
     w, h = img.size
     kb = os.path.getsize(image_path) // 1024
     ratio = w / h
