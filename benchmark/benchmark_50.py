@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-50-Image Comprehensive Benchmark: Local Pipeline vs OpenRouter Ground Truth
-===========================================================================
-Tests DocTR OCR + BLIP captioning + camera/digital detection
-against OpenRouter gpt-4o vision across 50 diverse images.
+50-Image Comprehensive Benchmark: 100% Local Pipeline
+=====================================================
+Tests DocTR OCR + BLIP captioning + MAX classifier
+against synthetic ground truth across 50 diverse images.
+NO cloud APIs — everything runs locally.
 
 Phases:
   1. Download 50 diverse images (photos, screenshots, digital art, text)
-  2. Run local pipeline (BLIP + DocTR + camera/digital)
-  3. Run OpenRouter gpt-4o (ground truth)
-  4. Compare & report
+  2. Run local pipeline (BLIP + DocTR + MAX classifier)
+  3. Compare against synthetic ground truth
+  4. Generate report
 """
 import os, sys, time, json, base64, io, random
 from pathlib import Path
