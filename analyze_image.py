@@ -10,9 +10,11 @@ Analysis: Pixel colors + MAX classifier (34 dims, 11.5M keywords)
 =====================================================
 
 Usage:
-  python analyze_image.py <image_path>                    # Auto engine (config or GPU detect)
+  python analyze_image.py <image_path>                    # Interactive: prompts for engine on first run
   python analyze_image.py <image_path> --engine llava     # Force LLaVA
   python analyze_image.py <image_path> --engine blip      # Force BLIP (CPU-friendly)
+  python analyze_image.py <image_path> --no-prompt        # Non-interactive: uses saved pref or auto-detect
+  python analyze_image.py <image_path> --reset-preference # Forget saved preference, re-prompt
   python analyze_image.py <image_path> --ocr all           # Compare DocTR vs EasyOCR
   python analyze_image.py <image_path> --no-vision         # OCR only
   python analyze_image.py <image_path> --no-ocr            # Vision only
@@ -22,6 +24,7 @@ Usage:
 
 Storage: Auto-detects available drives (avoids C: on Windows).
 GPU: LLaVA needs 6GB+ VRAM. BLIP works on CPU.
+Interactive: On first run without a saved preference, prompts "Short or Detailed?"
 """
 import sys, os, time, argparse
 
@@ -35,7 +38,13 @@ from PIL import Image
 # ═══════════════════════════════════════════════════════════
 # ENGINE 1: DocTR OCR — PyTorch, db_resnet50 + crnn_vgg16_bn
 # ═══════════════════════════════════════════════════════════
+
+# Module-level cached DocTR predictor (avoids reloading model on every call)
+_doctr_model = None
+_doctr_model_device = None
+
 def run_doctr(image_path, force_cpu=False):
+    global _doctr_model, _doctr_model_device
     from doctr.io import DocumentFile
     from doctr.models import ocr_predictor
     t0 = time.time()
@@ -45,12 +54,16 @@ def run_doctr(image_path, force_cpu=False):
         has_gpu = False
         device = "cpu"
     
-    model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
-    if has_gpu:
-        model = model.cuda()
+    # Reuse cached model if device hasn't changed
+    target_device = device if has_gpu else "cpu"
+    if _doctr_model is None or _doctr_model_device != target_device:
+        _doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
+        if has_gpu:
+            _doctr_model = _doctr_model.cuda()
+        _doctr_model_device = target_device
     
     doc = DocumentFile.from_images(image_path)
-    result = model(doc)
+    result = _doctr_model(doc)
     elapsed = time.time() - t0
     
     words = []
@@ -122,8 +135,14 @@ def run_llava(image_path, detail="rich"):
         "vram_gb": result.get('vram_gb', 0),
     }
 
+# Module-level cached BLIP model
+_blip_processor = None
+_blip_model = None
+_blip_device = None
+
 def run_blip(image_path):
-    """Run BLIP-base for fast short captions. Works on CPU."""
+    """Run BLIP-base for fast short captions. Works on CPU. Model cached for reuse."""
+    global _blip_processor, _blip_model, _blip_device
     from PIL import Image
     from transformers import BlipProcessor, BlipForConditionalGeneration
     import torch as _torch
@@ -135,18 +154,20 @@ def run_blip(image_path):
     cache_dir = os.environ.get('HF_HOME', None)
     kwargs = {'cache_dir': cache_dir} if cache_dir else {}
     
-    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
-    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
-    
-    # Use GPU if available for BLIP too
     device = "cuda" if _torch.cuda.is_available() else "cpu"
-    model = model.to(device)
-    inputs = processor(img, text="a picture of", return_tensors="pt").to(device)
+    
+    if _blip_processor is None or _blip_device != device:
+        _blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
+        _blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
+        _blip_model = _blip_model.to(device)
+        _blip_device = device
+    
+    inputs = _blip_processor(img, text="a picture of", return_tensors="pt").to(device)
     
     with _torch.no_grad():
-        out = model.generate(**inputs, max_new_tokens=100, num_beams=3)
+        out = _blip_model.generate(**inputs, max_new_tokens=100, num_beams=3)
     
-    caption = processor.decode(out[0], skip_special_tokens=True)
+    caption = _blip_processor.decode(out[0], skip_special_tokens=True)
     elapsed = time.time() - t0
     
     return {
@@ -204,13 +225,22 @@ def _load_image_safely(image_path):
 def analyze_metadata(image_path):
     from PIL import Image
     import os
-    img = _load_image_safely(image_path)
+    import numpy as np
+    try:
+        img = _load_image_safely(image_path)
+    except Exception as e:
+        return {
+            "dimensions": "unknown", "ratio": 0.0,
+            "file_size_kb": os.path.getsize(image_path) // 1024 if os.path.exists(image_path) else 0,
+            "mode": "error", "avg_brightness": 0, "is_dark": False,
+            "error": str(e),
+        }
     w, h = img.size
     kb = os.path.getsize(image_path) // 1024
-    ratio = w / h
+    ratio = w / max(h, 1)
     gray = img.convert('L')
-    px = list(gray.getdata())
-    avg_brightness = sum(px) / len(px)
+    px_array = np.array(gray, dtype=np.float32).ravel()
+    avg_brightness = float(np.mean(px_array))
     return {
         "dimensions": f"{w}x{h}", "ratio": round(ratio, 2),
         "file_size_kb": kb, "mode": img.mode,
@@ -218,146 +248,8 @@ def analyze_metadata(image_path):
     }
 
 # ═══════════════════════════════════════════════════════════
-# DETAILED DESCRIPTION GENERATOR
+# NOTE: generate_detailed_description() is imported from describe_engine.py
 # ═══════════════════════════════════════════════════════════
-
-def generate_detailed_description(blip_caption, labels=None, metadata=None):
-    """
-    Generates a rich multi-paragraph description by combining
-    BLIP's caption with MAX classifier labels and image metadata.
-    """
-    if labels is None:
-        try:
-            from max_classifier import classify_image
-            labels = classify_image(blip_caption)
-        except ImportError:
-            return blip_caption
-    
-    source = labels.get('source', ['unknown'])
-    source = source[0] if source else 'unknown'
-    subjects = labels.get('subject', [])
-    colors = labels.get('color', [])
-    text_info = labels.get('text', [])
-    setting = labels.get('setting', [])
-    environment = labels.get('environment', [])
-    composition = labels.get('composition', [])
-    mood = labels.get('mood', [])
-    pattern = labels.get('pattern', [])
-    material = labels.get('material', [])
-    style = labels.get('style', [])
-    lighting = labels.get('lighting', [])
-    weather = labels.get('weather', [])
-    time_of_day = labels.get('time_of_day', [])
-    
-    # ── Build rich, flowing description ──
-    paragraphs = []
-    
-    # PARAGRAPH 1: Main subject + type
-    p1 = []
-    p1.append(blip_caption.capitalize() + ".")
-    
-    source_descriptions = {
-        'photo': 'This appears to be a photograph or photorealistic image.',
-        'digital_abstract': 'This is a digital or computer-generated image.',
-        'painting': 'This is a painting.',
-        'drawing': 'This is a drawing or sketch.',
-        'illustration': 'This is an illustration.',
-        'diagram': 'This is a diagram, chart, or infographic.',
-        'screenshot': 'This appears to be a screenshot or user interface.',
-        'map': 'This is a map or cartographic image.',
-    }
-    if source in source_descriptions:
-        p1.append(source_descriptions[source])
-    
-    paragraphs.append(" ".join(p1))
-    
-    # PARAGRAPH 2: Visual details (color, lighting, composition, patterns)
-    p2 = []
-    
-    color_map = {
-        'warm_tones': 'warm tones of red, orange, and yellow',
-        'cool_tones': 'cool tones of blue, purple, and teal',
-        'dark_dim': 'a dark, subdued palette with deep shadows',
-        'bright_light': 'a bright, well-illuminated palette',
-        'vibrant_colorful': 'vibrant, saturated colors throughout',
-        'monochrome_bw': 'a black and white or grayscale tonality',
-        'pastel': 'soft, muted pastel hues',
-        'high_contrast': 'strong contrast between light and dark areas',
-    }
-    color_parts = [color_map[c] for c in colors if c in color_map]
-    if color_parts:
-        p2.append("The color palette is dominated by " + "; ".join(color_parts) + ".")
-    
-    if lighting:
-        p2.append(f"The lighting is {', '.join(l.replace('_',' ') for l in lighting)}.")
-    
-    if composition:
-        p2.append(f"The composition uses a {', '.join(c.replace('_',' ') for c in composition)} perspective.")
-    
-    if pattern:
-        p2.append(f"Visible patterns and structures include {', '.join(p.replace('_',' ') for p in pattern)}.")
-    
-    if weather:
-        p2.append(f"Weather conditions: {', '.join(w.replace('_',' ') for w in weather)}.")
-    
-    if time_of_day:
-        p2.append(f"The time of day appears to be {', '.join(t.replace('_',' ') for t in time_of_day)}.")
-    
-    if p2:
-        paragraphs.append(" ".join(p2))
-    
-    # PARAGRAPH 3: Subject, setting, environment, mood
-    p3 = []
-    
-    if subjects:
-        subject_str = ", ".join(s.replace('_', ' ') for s in subjects)
-        p3.append(f"The primary subject matter includes: {subject_str}.")
-    
-    if setting:
-        p3.append(f"The setting is {', '.join(s.replace('_',' ') for s in setting)}.")
-    
-    if environment:
-        p3.append(f"The environment can be characterized as {', '.join(e.replace('_',' ') for e in environment)}.")
-    
-    if material:
-        p3.append(f"Notable materials and textures: {', '.join(m.replace('_',' ') for m in material)}.")
-    
-    if style:
-        p3.append(f"The visual style is {', '.join(s.replace('_',' ') for s in style)}.")
-    
-    if mood:
-        p3.append(f"The overall mood conveyed is {', '.join(m.replace('_',' ') for m in mood)}.")
-    
-    if p3:
-        paragraphs.append(" ".join(p3))
-    
-    # PARAGRAPH 4: Text content and metadata
-    p4 = []
-    
-    if text_info:
-        if 'has_text' in text_info:
-            if 'text_heavy' in text_info:
-                p4.append("The image contains substantial visible text or typography.")
-                if 'sign_present' in text_info:
-                    p4.append("Signs, labels, or banners with text are present.")
-            else:
-                p4.append("Some visible text or lettering is present in the image.")
-        else:
-            p4.append("No visible text, labels, or lettering is present.")
-    else:
-        p4.append("No visible text or lettering is present.")
-    
-    if metadata:
-        dims = metadata.get('dimensions', '')
-        kb = metadata.get('file_size_kb', '')
-        if dims:
-            p4.append(f"Image dimensions: {dims} ({kb}KB).")
-    
-    if p4:
-        paragraphs.append(" ".join(p4))
-    
-    return "\n\n".join(paragraphs)
-
 
 # ═══════════════════════════════════════════════════════════
 # MAIN
@@ -368,8 +260,12 @@ if __name__ == '__main__':
     parser.add_argument('--ocr', default='doctr', choices=['doctr', 'easyocr', 'all', 'none'])
     parser.add_argument('--no-ocr', action='store_true', help='Skip OCR entirely')
     parser.add_argument('--no-vision', action='store_true', help='Skip vision/captioning')
-    parser.add_argument('--engine', default='auto', choices=['auto', 'llava', 'blip'],
-                       help='Vision engine: llava (rich), blip (fast), auto (detect)')
+    parser.add_argument('--engine', default=None, choices=['auto', 'llava', 'blip'],
+                       help='Vision engine: llava (rich), blip (fast). Overrides saved preference.')
+    parser.add_argument('--no-prompt', action='store_true',
+                       help='Non-interactive: use saved preference or auto-detect without prompting')
+    parser.add_argument('--reset-preference', action='store_true',
+                       help='Forget saved engine preference (will re-prompt next time)')
     parser.add_argument('--show-engines', action='store_true',
                        help='Show GPU info and engine recommendation, then exit')
     parser.add_argument('--drive', default=None, help='Storage drive (e.g., D:, E:, /mnt/data). Auto-detected if not set.')
@@ -381,10 +277,16 @@ if __name__ == '__main__':
         from engine_config import print_engine_recommendation
         print_engine_recommendation()
         sys.exit(0)
-    
+
+    # --reset-preference: forget saved choice and exit
+    if args.reset_preference:
+        from engine_config import reset_engine_preference
+        reset_engine_preference()
+        sys.exit(0)
+
     if not args.image:
         parser.error("image path required (or use --show-engines)")
-    
+
     image_path = args.image
     if not os.path.exists(image_path):
         print(f"Error: File not found: {image_path}")
@@ -395,16 +297,29 @@ if __name__ == '__main__':
     config = setup_environment(drive)
     has_gpu, device, gpu_name = gpu_available()
 
+    # ── Engine Selection (Phase 1: Interactive Prompting) ──
+    from engine_config import get_or_prompt_engine, read_engine_config
+
+    engine_override = args.engine if args.engine and args.engine != 'auto' else None
+    if args.no_prompt:
+        # Non-interactive: saved pref → auto-detect
+        chosen_engine = get_or_prompt_engine(force=engine_override, interactive=False)
+    else:
+        # Interactive: prompts user if no saved preference
+        chosen_engine = get_or_prompt_engine(force=engine_override, interactive=True)
+
     do_ocr = not args.no_ocr
     do_vision = not args.no_vision
     if args.ocr == 'none':
         do_ocr = False
 
     print("=" * 70)
-    print(f"  📷 {os.path.basename(image_path)}")
-    print(f"  🏠 100% LOCAL — zero API calls, zero rate limits, zero cost")
-    print(f"  💾 Storage: {config['drive']}")
-    print(f"  🖥️  GPU: {gpu_info_str()}")
+    engine_display = "LLaVA (detailed)" if chosen_engine == "llava" else "BLIP (short)"
+    print(f"  \U0001f4f7 {os.path.basename(image_path)}")
+    print(f"  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print(f"  \U0001f4be Storage: {config['drive']}")
+    print(f"  \U0001f5a5\ufe0f  GPU: {gpu_info_str()}")
+    print(f"  \U0001f9e0 Engine: {engine_display}")
     print("=" * 70)
 
     # ── Metadata ──
@@ -416,14 +331,13 @@ if __name__ == '__main__':
 
     # ── LLaVA / BLIP Vision ──
     if do_vision:
-        engine_name = args.engine if hasattr(args, 'engine') else 'auto'
-        print(f"\n  🧠 Vision ({engine_name})...", end=" ", flush=True)
+        print(f"\n  \U0001f9e0 Vision ({engine_display})...", end=" ", flush=True)
         try:
-            r = run_vision(image_path, engine=engine_name)
+            r = run_vision(image_path, engine=chosen_engine)
             print(f"done ({r['time_seconds']}s, {r.get('vram_gb',0):.1f}GB VRAM)")
             results['vision'] = r
         except Exception as e:
-            print(f"❌ {e}")
+            print(f"\u274c {e}")
     else:
         print()
 
@@ -451,20 +365,21 @@ if __name__ == '__main__':
     print(f"{'=' * 70}")
 
     if 'vision' in results:
-        print(f"\n  ── LLaVA Description ──")
+        import textwrap
+        print(f"\n  ── {'LLaVA' if chosen_engine == 'llava' else 'BLIP'} Description ──")
         caption = results['vision']['caption']
         # Truncate very long descriptions for display
         if len(caption) > 800:
             caption = caption[:800] + "..."
-        print(f"  📝 {caption}")
-        
+        print(f"  \U0001f4dd {caption}")
+
         # Detailed structured description
         try:
             from max_classifier import classify_image
             from describe_engine import generate_detailed_description
             labels = classify_image(caption)
             detailed = generate_detailed_description(caption, labels, meta)
-            
+
             # Pixel analysis for color/motion details
             try:
                 from pixel_analysis import analyze_pixels, pixel_analysis_to_text
@@ -476,7 +391,6 @@ if __name__ == '__main__':
             except ImportError:
                 pass
             print(f"\n  ── Structured Summary ──")
-            import textwrap
             for line in textwrap.wrap(detailed, width=65):
                 print(f"  {line}")
         except ImportError:

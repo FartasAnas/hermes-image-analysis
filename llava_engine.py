@@ -179,6 +179,10 @@ class LLaVAEngine:
         elapsed = time.time() - t0
         vram = torch.cuda.memory_allocated(0) / 1024**3 if torch.cuda.is_available() else 0
         
+        # Free temporary tensors from this inference to prevent VRAM fragmentation
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
         return {
             "engine": "LLaVA-1.5-7B (4-bit)",
             "description": desc,

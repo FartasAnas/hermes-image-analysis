@@ -11,42 +11,52 @@ description: "THE primary image analysis skill. 100% LOCAL pipeline. DEFAULT: BL
 
 When the user sends an image, asks "what's in this image", "describe this", "analyze this photo", or ANY image-related request — you MUST use this pipeline. Never use cloud APIs (OpenRouter vision, GPT vision, Claude vision). Everything runs 100% local.
 
-## 🎯 Engine Selection — DEFAULT is BLIP
+## 🎯 Engine Selection — Interactive First-Run Prompt
 
-**BLIP-base is the DEFAULT engine.** It's fast (0.8s), works on CPU and GPU, and produces short accurate captions. Use BLIP for:
-- Quick "what's in this image?" queries
-- OCR-focused analysis
-- Any image task unless the user explicitly asks for detail
+**On the first run**, the pipeline prompts the user interactively:
+*"Would you like a short or detailed description?"*
 
-**LLaVA-1.5-7B is ON-DEMAND only.** Use LLaVA ONLY when the user uses trigger words:
-- "detailed description", "rich description", "in-depth analysis"
-- "describe in detail", "analyze thoroughly", "comprehensive description"
-- "what do you see in detail", "full analysis"
-- Or explicitly says "use LLaVA" / "use the detailed engine"
+- **[1] SHORT → BLIP-base** (0.8s, fast captions, works on CPU/GPU)
+- **[2] DETAILED → LLaVA-1.5-7B** (~14s, rich multi-paragraph, GPU only)
 
-## Quick Usage
-
-```bash
-# DEFAULT — fast BLIP analysis
-python analyze_image.py <image_path>
-
-# Detailed — LLaVA (only when user asks for rich detail)
-python analyze_image.py <image_path> --engine llava
-
-# OCR only
-python analyze_image.py <image_path> --no-vision
-
-# Show available engines
-python analyze_image.py --show-engines
-```
+**The choice is saved** to `engine_preference.json` and used for ALL future images — no re-prompting. Use `--engine llava|blip` to override per-run. Run `--reset-preference` to be re-prompted next time.
 
 ## Decision Flow (for Hermes)
 
 ```
 User sends an image:
-  └─ Does user say "detailed" / "rich" / "in-depth" / "describe in detail"?
-       ├─ YES → Use LLaVA: python analyze_image.py <img> --engine llava
-       └─ NO  → Use BLIP (default): python analyze_image.py <img>
+  └─ Load this skill (MANDATORY)
+       └─ Check: does user say "detailed" / "rich" / "in-depth" trigger words?
+            ├─ YES → python analyze_image.py <img> --engine llava --no-prompt
+            └─ NO  → Check: does engine_preference.json exist?
+                 ├─ YES → python analyze_image.py <img> --no-prompt  (uses saved pref)
+                 └─ NO  → python analyze_image.py <img>  (interactive prompt)
+                          Hermes: "Would you like a short or detailed description?"
+                          Save answer for all future runs.
+```
+
+## Quick Usage
+
+```bash
+# Interactive: prompts for engine on first run, then remembers
+python analyze_image.py <image_path>
+
+# Non-interactive: uses saved preference (no prompt)
+python analyze_image.py <image_path> --no-prompt
+
+# Force specific engine (overrides saved preference)
+python analyze_image.py <image_path> --engine blip
+python analyze_image.py <image_path> --engine llava
+
+# Forget preference and re-prompt next time
+python analyze_image.py --reset-preference
+
+# OCR only / Vision only
+python analyze_image.py <image_path> --no-vision
+python analyze_image.py <image_path> --no-ocr
+
+# Show engines and saved preference
+python analyze_image.py --show-engines
 ```
 
 ## Engines
@@ -67,9 +77,11 @@ User sends an image:
 ## Key Technical Rules
 
 1. **BLIP is the DEFAULT.** Only use LLaVA when user explicitly asks for detailed/rich/in-depth.
-2. **Follow the decision flow above.** Check for trigger words before choosing engine.
-3. **Never use cloud APIs.** No OpenRouter, GPT vision, Claude vision. 100% local.
-4. **Alpha channel images (LA/RGBA) are handled** by `_load_image_safely()`.
-5. **Drive auto-detected** — no hardcoded paths.
-6. **OCR uses DocTR** (primary) + EasyOCR (backup). Use `--ocr all` to compare.
-7. **Pixel analysis** runs automatically for color/motion detection.
+2. **Interactive first-run.** On very first use, prompt the user with "short or detailed?" and persist the answer.
+3. **Saved preference.** Check `engine_preference.json` before running. No need to ask every time.
+4. **Trigger words still work.** If user says "detailed" in message, use `--engine llava` regardless of saved pref.
+5. **Never use cloud APIs.** No OpenRouter, GPT vision, Claude vision. 100% local.
+6. **Alpha channel images (LA/RGBA) are handled** by `_load_image_safely()`.
+7. **Drive auto-detected** — no hardcoded paths.
+8. **OCR uses DocTR** (primary) + EasyOCR (backup). Use `--ocr all` to compare.
+9. **Pixel analysis** runs automatically for color/motion detection.

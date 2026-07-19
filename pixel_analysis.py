@@ -9,11 +9,80 @@ Fills BLIP's blind spots by analyzing image pixels directly:
   - Brightness distribution
   - Contrast analysis
 
-All GPU-accelerated where possible, falls back to CPU.
+Optimized: NumPy vectorized HSV conversion, smart downsampling, tuned thresholds.
 """
 import numpy as np
 from PIL import Image
-import colorsys
+
+
+def _rgb_to_hsv_vectorized(rgb_array):
+    """
+    Vectorized RGB → HSV conversion using NumPy.
+    Replaces the old pure-Python colorsys loop — 10-50× faster.
+    
+    Args:
+        rgb_array: numpy array of shape (N, 3) with values 0-255
+    Returns:
+        hsv_array: numpy array of shape (N, 3) with H in [0,360], S,V in [0,1]
+    """
+    r = rgb_array[:, 0].astype(np.float32) / 255.0
+    g = rgb_array[:, 1].astype(np.float32) / 255.0
+    b = rgb_array[:, 2].astype(np.float32) / 255.0
+    
+    max_c = np.maximum(np.maximum(r, g), b)
+    min_c = np.minimum(np.minimum(r, g), b)
+    delta = max_c - min_c
+    
+    # Hue
+    h = np.zeros_like(max_c)
+    mask = delta > 1e-6
+    
+    # Red is max
+    r_max = (max_c == r) & mask
+    h[r_max] = 60 * (((g[r_max] - b[r_max]) / delta[r_max]) % 6)
+    
+    # Green is max
+    g_max = (max_c == g) & mask
+    h[g_max] = 60 * (((b[g_max] - r[g_max]) / delta[g_max]) + 2)
+    
+    # Blue is max
+    b_max = (max_c == b) & mask
+    h[b_max] = 60 * (((r[b_max] - g[b_max]) / delta[b_max]) + 4)
+    
+    # Saturation
+    s = np.zeros_like(max_c)
+    s[mask] = delta[mask] / max_c[mask]
+    
+    # Value
+    v = max_c
+    
+    return np.column_stack([h, s, v])
+
+
+def _color_name_from_hsv(h, s, v):
+    """Classify a single HSV triplet into a human-readable name."""
+    if v < 0.15:
+        return "near-black"
+    if v > 0.90 and s < 0.1:
+        return "near-white"
+    if s < 0.15:
+        return "gray"
+    if h < 15 or h > 345:
+        return "red"
+    if h < 45:
+        return "orange"
+    if h < 70:
+        return "yellow/gold"
+    if h < 170:
+        return "green"
+    if h < 260:
+        return "blue"
+    if h < 290:
+        return "purple/violet"
+    if h < 330:
+        return "pink/magenta"
+    return "red"
+
 
 def analyze_pixels(image_path):
     """
@@ -21,6 +90,7 @@ def analyze_pixels(image_path):
     Returns dict with color, composition, and motion metrics.
     """
     img = Image.open(image_path)
+    
     # Handle alpha channels
     if img.mode in ('LA', 'PA'):
         bg = Image.new('L', img.size, 255)
@@ -29,7 +99,10 @@ def analyze_pixels(image_path):
         img = bg.convert('RGB')
     elif img.mode in ('RGBA', 'RGBa'):
         bg = Image.new('RGB', img.size, (255, 255, 255))
-        bg.paste(img, mask=img.split()[3] if img.mode == 'RGBA' else None)
+        if img.mode == 'RGBA':
+            bg.paste(img, mask=img.split()[3])
+        else:
+            bg.paste(img)
         img = bg
     else:
         img = img.convert('RGB')
@@ -46,63 +119,47 @@ def analyze_pixels(image_path):
     results = {}
     
     # ═══════════════════════════════════════════════════════════
-    # 1. DOMINANT COLORS (k-means clustering)
+    # 1. DOMINANT COLORS (histogram sampling — fast, accurate)
     # ═══════════════════════════════════════════════════════════
     pixels = arr.reshape(-1, 3)
     
-    # Simple dominant color extraction using histogram bins
-    # Faster than k-means for this purpose
-    n_bins = 16
-    hist_r = np.histogram(pixels[:, 0], bins=n_bins, range=(0, 256))
-    hist_g = np.histogram(pixels[:, 1], bins=n_bins, range=(0, 256))
-    hist_b = np.histogram(pixels[:, 2], bins=n_bins, range=(0, 256))
+    # Sample pixels (every Nth pixel for large images)
+    sample_step = max(1, len(pixels) // 8000)
+    sampled = pixels[::sample_step]
     
-    # Get top 5 most common color bins
+    # Histogram binning for dominant colors
+    n_bins = 12
     bin_size = 256 // n_bins
-    color_counts = {}
-    for i in range(0, len(pixels), max(1, len(pixels) // 5000)):
-        r = int(pixels[i, 0] // bin_size) * bin_size + bin_size // 2
-        g = int(pixels[i, 1] // bin_size) * bin_size + bin_size // 2
-        b = int(pixels[i, 2] // bin_size) * bin_size + bin_size // 2
-        key = (r, g, b)
-        color_counts[key] = color_counts.get(key, 0) + 1
+    bins = (sampled // bin_size).astype(int)
+    bins = np.clip(bins, 0, n_bins - 1)
     
-    top_colors = sorted(color_counts.items(), key=lambda x: -x[1])[:8]
+    # Convert to 1D bin index
+    bin_indices = bins[:, 0] * n_bins * n_bins + bins[:, 1] * n_bins + bins[:, 2]
+    unique_bins, counts = np.unique(bin_indices, return_counts=True)
     
-    # Classify dominant colors
+    # Get top colors by bin count
+    top_indices = np.argsort(-counts)[:8]
+    total_count = counts.sum()
+    
     dominant_colors = []
-    for (r, g, b), count in top_colors:
-        hsv = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-        hue = hsv[0] * 360
-        sat = hsv[1]
-        val = hsv[2]
+    for idx in top_indices:
+        # Decode bin index back to RGB
+        b_val = unique_bins[idx] % n_bins
+        g_val = (unique_bins[idx] // n_bins) % n_bins
+        r_val = unique_bins[idx] // (n_bins * n_bins)
         
-        # Color naming
-        if val < 0.15:
-            name = "near-black"
-        elif val > 0.90 and sat < 0.1:
-            name = "near-white"
-        elif sat < 0.15:
-            name = "gray"
-        elif hue < 15 or hue > 345:
-            name = "red"
-        elif hue < 45:
-            name = "orange"
-        elif hue < 70:
-            name = "yellow/gold"
-        elif hue < 170:
-            name = "green"
-        elif hue < 260:
-            name = "blue"
-        elif hue < 290:
-            name = "purple/violet"
-        elif hue < 330:
-            name = "pink/magenta"
-        else:
-            name = "red"
+        r = int(r_val * bin_size + bin_size // 2)
+        g = int(g_val * bin_size + bin_size // 2)
+        b = int(b_val * bin_size + bin_size // 2)
         
-        pct = count / sum(c for _, c in top_colors) * 100
-        if pct > 2:  # Only include significant colors
+        pct = counts[idx] / total_count * 100
+        
+        # HSV for color naming
+        hsv = _rgb_to_hsv_vectorized(np.array([[r, g, b]]))[0]
+        hue, sat, val = float(hsv[0]), float(hsv[1]), float(hsv[2])
+        name = _color_name_from_hsv(hue, sat, val)
+        
+        if pct > 1.5:  # Only include significant colors
             dominant_colors.append({
                 "name": name,
                 "hex": f"#{r:02x}{g:02x}{b:02x}",
@@ -113,21 +170,24 @@ def analyze_pixels(image_path):
     results["dominant_colors"] = dominant_colors[:6]
     
     # ═══════════════════════════════════════════════════════════
-    # 2. COLOR DIVERSITY / VIBRANCY
+    # 2. COLOR DIVERSITY / SATURATION / BRIGHTNESS (vectorized)
     # ═══════════════════════════════════════════════════════════
-    unique_colors = len(np.unique(pixels.reshape(-1, 3), axis=0))
-    total_pixels = pixels.shape[0]
-    color_diversity = min(unique_colors / total_pixels * 100, 100)
+    # Sample every 20th pixel for HSV computation
+    sample_step_hsv = max(1, len(pixels) // 4000)
+    sampled_pixels = pixels[::sample_step_hsv]
     
-    # Average saturation
-    hsv_pixels = np.array([colorsys.rgb_to_hsv(r/255, g/255, b/255) 
-                          for r, g, b in pixels[::10]])  # Sample every 10th pixel
+    # Vectorized HSV conversion
+    hsv_pixels = _rgb_to_hsv_vectorized(sampled_pixels)
     avg_saturation = float(np.mean(hsv_pixels[:, 1]))
     avg_brightness = float(np.mean(hsv_pixels[:, 2]))
     
+    # Unique color estimate (downsampled to avoid np.unique on full array)
+    downsampled = pixels[::max(1, len(pixels) // 10000)]
+    unique_colors = len(np.unique(downsampled.astype(np.int32).reshape(-1, 3), axis=0))
+    
     results["color_diversity"] = {
-        "unique_colors": unique_colors,
-        "diversity_pct": round(color_diversity, 1),
+        "unique_colors_est": unique_colors,
+        "diversity_ratio": round(unique_colors / min(len(downsampled), 10000) * 100, 1),
         "avg_saturation": round(avg_saturation, 3),
         "avg_brightness": round(avg_brightness, 3),
     }
@@ -143,11 +203,10 @@ def analyze_pixels(image_path):
         results["vibrancy"] = "near-monochrome or desaturated"
     
     # ═══════════════════════════════════════════════════════════
-    # 3. BRIGHTNESS ANALYSIS
+    # 3. BRIGHTNESS ANALYSIS (vectorized)
     # ═══════════════════════════════════════════════════════════
-    brightness = np.mean(pixels, axis=1)
-    brightness_2d = brightness.reshape(h, w)
-    brightness_flat = brightness.flatten()
+    brightness_flat = np.mean(pixels, axis=1)
+    brightness_2d = brightness_flat.reshape(h, w)
     
     dark_pct = float(np.mean(brightness_flat < 40) * 100)
     bright_pct = float(np.mean(brightness_flat > 200) * 100)
@@ -175,25 +234,21 @@ def analyze_pixels(image_path):
     center_y, center_x = h // 2, w // 2
     y_coords, x_coords = np.mgrid[0:h, 0:w]
     
-    # Distance from center
     dist_from_center = np.sqrt((x_coords - center_x)**2 + (y_coords - center_y)**2)
     max_dist = np.sqrt(center_x**2 + center_y**2)
-    norm_dist = dist_from_center / max_dist
+    norm_dist = dist_from_center / max(max_dist, 1)
     
-    # Check if brightness increases toward edges (zoom effect: center bright, edges dark-streaked)
-    # Sample rings at different distances
     ring_brightness = []
     for ring_radius in [0.1, 0.3, 0.5, 0.7, 0.9]:
         mask = (norm_dist > ring_radius - 0.05) & (norm_dist < ring_radius + 0.05)
         if mask.sum() > 0:
             ring_brightness.append(float(np.mean(brightness_2d[mask])))
     
-    # Radial analysis: is there a pattern?
     radial_variance = float(np.std(ring_brightness)) if len(ring_brightness) > 1 else 0
     
-    # Check for angular patterns (streaks)
+    # Angular patterns (streaks)
     angles = np.arctan2(y_coords - center_y, x_coords - center_x)
-    angle_bins = 36  # 10-degree bins
+    angle_bins = 24
     angle_brightness = []
     for i in range(angle_bins):
         angle_min = -np.pi + i * 2 * np.pi / angle_bins
@@ -204,7 +259,6 @@ def analyze_pixels(image_path):
     
     angular_variance = float(np.std(angle_brightness)) if angle_brightness else 0
     
-    # Zoom/streak detection threshold
     if radial_variance > 15 and angular_variance > 8:
         results["motion_effect"] = "strong radial zoom or streak effect emanating from center"
     elif radial_variance > 8:
@@ -218,10 +272,10 @@ def analyze_pixels(image_path):
     brightness_std = float(np.std(brightness_flat))
     results["contrast"] = {
         "std_dev": round(brightness_std, 1),
-        "level": "very high" if brightness_std > 80 else
-                 "high" if brightness_std > 50 else
-                 "moderate" if brightness_std > 25 else
-                 "low"
+        "level": ("very high" if brightness_std > 80 else
+                  "high" if brightness_std > 50 else
+                  "moderate" if brightness_std > 25 else
+                  "low")
     }
     
     return results
@@ -231,26 +285,21 @@ def pixel_analysis_to_text(analysis):
     """Convert pixel analysis results to natural language text."""
     parts = []
     
-    # Colors
     if analysis.get("dominant_colors"):
         dc = analysis["dominant_colors"]
-        color_list = [f"{c['name']} ({c['hex']}, {c['percentage']:.0f}%)" 
+        color_list = [f"{c['name']} ({c['hex']}, {c['percentage']:.0f}%)"
                      for c in dc[:5]]
         parts.append(f"Dominant colors: {', '.join(color_list)}.")
     
-    # Vibrancy
     if analysis.get("vibrancy"):
         parts.append(f"The image is {analysis['vibrancy']}.")
     
-    # Brightness
     if analysis.get("brightness_desc"):
         parts.append(f"Its exposure is {analysis['brightness_desc']}.")
     
-    # Motion
     if analysis.get("motion_effect"):
         parts.append(f"There is a {analysis['motion_effect']}.")
     
-    # Contrast
     if analysis.get("contrast"):
         parts.append(f"Contrast is {analysis['contrast']['level']} (σ={analysis['contrast']['std_dev']}).")
     
@@ -258,10 +307,9 @@ def pixel_analysis_to_text(analysis):
 
 
 if __name__ == '__main__':
-    import sys
+    import sys, json
     if len(sys.argv) > 1:
         result = analyze_pixels(sys.argv[1])
-        import json
         print(json.dumps(result, indent=2))
         print("\n--- Natural Language ---")
         print(pixel_analysis_to_text(result))
