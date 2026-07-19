@@ -9,13 +9,26 @@ Uses word-boundary matching, multi-word phrase matching, and derived rules.
 import sys, os
 
 # Import the massive keyword database
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) or '.')
+import os as _os
+_scripts_dir = _os.path.dirname(_os.path.abspath(__file__))
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
 try:
     from keyword_generator import ALL_DIMENSIONS
 except ImportError:
-    # Fallback: import from scripts directory
-    sys.path.insert(0, r'E:/hermes_tools/scripts')
-    from keyword_generator import ALL_DIMENSIONS
+    # Last resort: try hermes_config for dynamic path
+    try:
+        from hermes_config import get_scripts_dir, get_storage_drive
+        _dyn_dir = get_scripts_dir(get_storage_drive())
+        if _dyn_dir not in sys.path:
+            sys.path.insert(0, _dyn_dir)
+        from keyword_generator import ALL_DIMENSIONS
+    except ImportError:
+        raise ImportError(
+            "Cannot find keyword_generator.py. "
+            "Place it in the same directory as max_classifier.py "
+            "or set up hermes_config.py for dynamic path detection."
+        )
 
 # ═══════════════════════════════════════════════════════════════
 # MATCHING ENGINE

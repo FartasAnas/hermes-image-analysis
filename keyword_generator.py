@@ -594,7 +594,7 @@ SUBJECT = {
     
     "food_drink": expand_keywords([
         "food", "meal", "dish", "cuisine", "recipe",
-        "fruit", "vegetable", "meat", "fish food", "bread",
+        "fruit", "vegetable", "meat", "fish", "bread",
         "cake", "pie", "pastry", "dessert", "cookie",
         "pizza", "pasta", "rice", "noodle", "soup",
         "salad", "sandwich", "burger", "taco", "sushi",
@@ -854,7 +854,7 @@ TEXT = {
         "system error", "error screen", "error message",
         "sale up to", "flash sale", "price for", "store at",
         "game over", "score", "high score",
-        "keyboard with", "keyboard button", "screenshote",
+        "keyboard with", "keyboard button", "screenshot",
         "pie chart", "bar chart", "flow chart", "diagram showing",
         "percentage of", "percent", "receipt", "invoice",
         "menu board", "a green menu", "calculator", "weather app",
