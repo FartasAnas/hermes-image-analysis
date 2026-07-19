@@ -27,11 +27,8 @@ GPU: LLaVA needs 6GB+ VRAM. BLIP works on CPU.
 Interactive: On first run without a saved preference, prompts "Short or Detailed?"
 """
 import sys, os, time, argparse
-
 # ── Dynamic config (no hardcoded paths) ──
 from hermes_config import setup_environment, gpu_available, gpu_info_str, get_storage_drive
-
-from PIL import Image
 
 # We'll set up env vars during main() after parsing args
 
@@ -300,7 +297,7 @@ if __name__ == '__main__':
     has_gpu, device, gpu_name = gpu_available()
 
     # ── Engine Selection (Phase 1: Interactive Prompting) ──
-    from engine_config import get_or_prompt_engine, read_engine_config
+    from engine_config import get_or_prompt_engine
 
     engine_override = args.engine if args.engine and args.engine != 'auto' else None
     if args.no_prompt:

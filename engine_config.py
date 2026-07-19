@@ -279,11 +279,8 @@ def prompt_user_for_engine():
     print()
 
     valid_choices = {'1', '2', '3', '4', '5', '6'}
-    # Without GPU, detailed options (2, 4, 6) are invalid
     if not has_gpu:
         valid_choices = {'1', '3', '5'}
-        # Show GPU-only warning for even numbers
-        pass  # already marked with ❌ above
 
     while True:
         try:

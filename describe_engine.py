@@ -20,12 +20,12 @@ Architecture:
 
 TECH_SIGNALS = [
     # Shell / CLI commands
-    "curl", "bash", "npm", "pip", "uv ", "git ", "python", "docker",
+    "curl", "bash", "npm", "pip", "uv", "git", "python", "docker",
     "sudo", "apt-get", "chmod", "ssh", "scp", "wget", "make", "gcc",
     # Windows paths and commands
     "C:\\", "D:\\", "E:\\", "C:/", "D:/", "E:/",
     "cmd.exe", "powershell", "msbuild", "dotnet",
-    # Programming tokens
+    # Programming tokens (space after keyword avoids matching "define"/"important")
     "def ", "import ", "class ", "function", "const ", "let ", "var ",
     "return", "print(", "console.", "<?php", "#!/",
     "True", "False", "None", "__", "lambda",
@@ -101,10 +101,9 @@ def _suppress_hallucinations(description, ocr_text):
         return description, is_tech
 
     # Build sanitized technical description
-    cmd_hints = [s for s in signals if s in [
-        "curl", "bash", "git", "python", "npm", "pip", "docker",
-        "uv ", "node", "cargo", "mvn", "gradle",
-    ]]
+    known_cmds = {"curl", "bash", "git", "python", "npm", "pip", "docker",
+                   "uv", "node", "cargo", "mvn", "gradle"}
+    cmd_hints = [s.strip() for s in signals if s.strip() in known_cmds]
 
     if cmd_hints:
         context = f"This appears to be a terminal or command-line screenshot showing output from {'/'.join(cmd_hints[:3])}."
@@ -296,7 +295,8 @@ def synthesize(state):
         color_parts.append(f"there is a {pixel['motion_effect']}")
 
     if color_parts:
-        parts.append("The image is " + "; ".join(color_parts))
+        prefix = "With " if parts else "The image has "
+        parts.append(prefix + "; ".join(color_parts))
 
     # ═══ STEP 5: Mood, style, setting ═══
     mood = classification.get("mood", [])
@@ -317,9 +317,8 @@ def synthesize(state):
     # ═══ STEP 6: Metadata ═══
     dims = meta.get("dimensions", "")
     kb = meta.get("file_size_kb", 0)
-    brightness = meta.get("avg_brightness", 0)
-    if dims:
-        parts.append(f"[{dims}, {kb}KB, brightness {brightness}/255]")
+    if dims and kb:
+        parts.append(f"{dims}, {kb}KB")
 
     # ═══ Assembly ═══
     paragraph = ". ".join(p for p in parts if p).replace("..", ".")
