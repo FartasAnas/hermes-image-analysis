@@ -26,9 +26,13 @@ Storage: Auto-detects available drives (avoids C: on Windows).
 GPU: LLaVA needs 6GB+ VRAM. BLIP works on CPU.
 Interactive: On first run without a saved preference, prompts "Short or Detailed?"
 """
-import sys, os, time, argparse
+import argparse
+import os
+import sys
+import time
+
 # ── Dynamic config (no hardcoded paths) ──
-from hermes_config import setup_environment, gpu_available, gpu_info_str, get_storage_drive
+from hermes_config import get_storage_drive, gpu_available, gpu_info_str, setup_environment
 
 # We'll set up env vars during main() after parsing args
 
@@ -45,12 +49,12 @@ def run_doctr(image_path, force_cpu=False):
     from doctr.io import DocumentFile
     from doctr.models import ocr_predictor
     t0 = time.time()
-    
+
     has_gpu, device, _ = gpu_available()
     if force_cpu:
         has_gpu = False
         device = "cpu"
-    
+
     # Reuse cached model if device hasn't changed
     target_device = device if has_gpu else "cpu"
     if _doctr_model is None or _doctr_model_device != target_device:
@@ -58,11 +62,11 @@ def run_doctr(image_path, force_cpu=False):
         if has_gpu:
             _doctr_model = _doctr_model.cuda()
         _doctr_model_device = target_device
-    
+
     doc = DocumentFile.from_images(image_path)
     result = _doctr_model(doc)
     elapsed = time.time() - t0
-    
+
     words = []
     for page in result.pages:
         for block in page.blocks:
@@ -86,16 +90,16 @@ def run_doctr(image_path, force_cpu=False):
 def run_easyocr(image_path, force_cpu=False):
     import easyocr
     t0 = time.time()
-    
+
     has_gpu, device, gpu_name = gpu_available()
     if force_cpu:
         has_gpu = False
         device = "cpu"
-    
+
     reader = easyocr.Reader(['en'], gpu=has_gpu, verbose=False)
     results = reader.readtext(image_path, detail=1, paragraph=False)
     elapsed = time.time() - t0
-    
+
     words = []
     for entry in results:
         if len(entry) == 3:
@@ -140,33 +144,32 @@ _blip_device = None
 def run_blip(image_path):
     """Run BLIP-base for fast short captions. Works on CPU. Model cached for reuse."""
     global _blip_processor, _blip_model, _blip_device
-    from PIL import Image
-    from transformers import BlipProcessor, BlipForConditionalGeneration
     import torch as _torch
-    
+    from transformers import BlipForConditionalGeneration, BlipProcessor
+
     t0 = time.time()
     img = _load_image_safely(image_path)
-    
+
     # Use correct HF cache path
     cache_dir = os.environ.get('HF_HOME', None)
     kwargs = {'cache_dir': cache_dir} if cache_dir else {}
-    
+
     device = "cuda" if _torch.cuda.is_available() else "cpu"
-    
+
     if _blip_processor is None or _blip_device != device:
         _blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
         _blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
         _blip_model = _blip_model.to(device)
         _blip_device = device
-    
+
     inputs = _blip_processor(img, text="a picture of", return_tensors="pt").to(device)
-    
+
     with _torch.no_grad():
         out = _blip_model.generate(**inputs, max_new_tokens=100, num_beams=3)
-    
+
     caption = _blip_processor.decode(out[0], skip_special_tokens=True)
     elapsed = time.time() - t0
-    
+
     return {
         "engine": "BLIP-base (Salesforce/blip-image-captioning-base)",
         "caption": caption,
@@ -177,9 +180,9 @@ def run_blip(image_path):
 def run_vision(image_path, engine="auto"):
     """Run the selected vision engine. Engine: 'llava', 'blip', or 'auto'."""
     from engine_config import get_engine_choice
-    
+
     choice = get_engine_choice(force=engine if engine != "auto" else None)
-    
+
     if choice == "llava":
         return run_llava(image_path)
     else:
@@ -187,41 +190,17 @@ def run_vision(image_path, engine="auto"):
 
 def _load_image_safely(image_path):
     """Load image, handling LA/RGBA alpha channels properly.
-    
-    For LA/RGBA images, the actual visual content may be in the alpha channel.
-    We composite onto a white background to preserve what the human eye sees.
+
+    Delegates to the shared image_utils.load_image_safely() to avoid
+    duplicating alpha-channel handling across modules.
     """
-    from PIL import Image
-    img = Image.open(image_path)
-    
-    if img.mode in ('LA', 'PA'):
-        # Luminance+Alpha: alpha channel IS the visible content
-        # Composite alpha onto white background
-        background = Image.new('L', img.size, 255)
-        alpha = img.getchannel('A')
-        background.paste(alpha, mask=alpha)
-        return background.convert('RGB')
-    
-    elif img.mode in ('RGBA', 'RGBa'):
-        # Composite onto white background to preserve transparency
-        background = Image.new('RGB', img.size, (255, 255, 255))
-        if img.mode == 'RGBA':
-            background.paste(img, mask=img.split()[3])
-        else:
-            background.paste(img)
-        return background
-    
-    elif img.mode == 'P':
-        # Palette mode — convert to RGBA first
-        return img.convert('RGBA').convert('RGB')
-    
-    else:
-        return img.convert('RGB')
+    from image_utils import load_image_safely
+    return load_image_safely(image_path)
 
 
 def analyze_metadata(image_path):
-    from PIL import Image
     import os
+
     import numpy as np
     try:
         img = _load_image_safely(image_path)
@@ -270,7 +249,7 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true',
                        help='Show raw engine outputs alongside unified description')
     args = parser.parse_args()
-    
+
     # --show-engines: display recommendation and exit
     if args.show_engines:
         from engine_config import print_engine_recommendation
@@ -315,7 +294,7 @@ if __name__ == '__main__':
     print("=" * 70)
     engine_display = "LLaVA (detailed)" if chosen_engine == "llava" else "BLIP (short)"
     print(f"  \U0001f4f7 {os.path.basename(image_path)}")
-    print(f"  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print("  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
     print(f"  \U0001f4be Storage: {config['drive']}")
     print(f"  \U0001f5a5\ufe0f  GPU: {gpu_info_str()}")
     print(f"  \U0001f9e0 Engine: {engine_display}")
@@ -350,7 +329,7 @@ if __name__ == '__main__':
                     r = run_doctr(image_path, force_cpu=args.force_cpu)
                 else:
                     r = run_easyocr(image_path, force_cpu=args.force_cpu)
-                gpu_tag = f" [GPU]" if r.get('device') != 'cpu' else ""
+                gpu_tag = " [GPU]" if r.get('device') != 'cpu' else ""
                 print(f"{r['word_count']} words ({r['avg_confidence']:.0%} conf) in {r['time_seconds']}s{gpu_tag}")
                 results[eng] = r
             except Exception as e:
@@ -361,7 +340,7 @@ if __name__ == '__main__':
     # ═══════════════════════════════════════════════════════
 
     # Build unified JSON state from all engine outputs
-    from describe_engine import build_state, synthesize, debug_dump
+    from describe_engine import build_state, debug_dump, synthesize
 
     ocr_for_state = results.get('doctr') or results.get('easyocr')
     vision_for_state = results.get('vision')
@@ -397,5 +376,5 @@ if __name__ == '__main__':
         print()
         print(debug_dump(state))
 
-    print(f"\n  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print("\n  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
     print(f"{'=' * 70}")

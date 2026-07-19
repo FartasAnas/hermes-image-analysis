@@ -12,16 +12,21 @@ Phases:
   3. Compare against synthetic ground truth
   4. Generate report
 """
-import os, sys, time, json, base64, io, random
+import base64
+import io
+import json
+import sys
+import time
 from pathlib import Path
 
 # ── Dynamic config (no hardcoded paths) ──
-from hermes_config import setup_environment, get_storage_drive, get_temp_dir
+from hermes_config import get_storage_drive, get_temp_dir, setup_environment
 
 drive = get_storage_drive(auto=True)
 config = setup_environment(drive)
 
 import urllib.request
+
 from PIL import Image
 
 BENCH_DIR = Path(get_temp_dir(drive)) / 'benchmark_50'
@@ -79,7 +84,7 @@ def download_images():
     print("=" * 70)
     print("PHASE 1: Downloading 50 diverse images")
     print("=" * 70)
-    
+
     downloaded = []
     for i, (fname, url) in enumerate(ALL_SOURCES):
         fpath = BENCH_DIR / fname
@@ -87,7 +92,7 @@ def download_images():
             print(f"  [{i+1:2d}/45] SKIP (exists): {fname}")
             downloaded.append(str(fpath))
             continue
-        
+
         try:
             print(f"  [{i+1:2d}/45] DOWNLOAD: {fname} ... ", end="", flush=True)
             req = urllib.request.Request(url, headers={
@@ -103,7 +108,7 @@ def download_images():
             downloaded.append(str(fpath))
         except Exception as e:
             print(f"FAIL: {e}")
-    
+
     print(f"\n  Downloaded: {len(downloaded)} images\n")
     return downloaded
 
@@ -127,30 +132,30 @@ def run_local_pipeline(image_paths):
     print("\n" + "=" * 70)
     print("PHASE 2: Local Pipeline (BLIP + DocTR + Camera/Digital)")
     print("=" * 70)
-    
+
     # Lazy-load models
-    from PIL import Image as PILImage
-    from transformers import BlipProcessor, BlipForConditionalGeneration
     from doctr.io import DocumentFile
     from doctr.models import ocr_predictor
-    
+    from PIL import Image as PILImage
+    from transformers import BlipForConditionalGeneration, BlipProcessor
+
     print("  Loading BLIP model...")
     t0 = time.time()
     blip_proc = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
     print(f"  BLIP loaded in {time.time()-t0:.1f}s")
-    
+
     print("  Loading DocTR model...")
     t0 = time.time()
     doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
     print(f"  DocTR loaded in {time.time()-t0:.1f}s")
-    
+
     results = {}
-    
+
     for i, img_path in enumerate(image_paths):
         fname = Path(img_path).name
         print(f"  [{i+1:2d}/{len(image_paths)}] {fname} ...", end=" ", flush=True)
-        
+
         try:
             # BLIP caption
             t_blip = time.time()
@@ -159,7 +164,7 @@ def run_local_pipeline(image_paths):
             out = blip_model.generate(**inputs, max_new_tokens=100)
             caption = blip_proc.decode(out[0], skip_special_tokens=True)
             blip_time = time.time() - t_blip
-            
+
             # DocTR OCR
             t_ocr = time.time()
             doc = DocumentFile.from_images(img_path)
@@ -174,10 +179,10 @@ def run_local_pipeline(image_paths):
                                 words.append({"text": t, "confidence": round(word.confidence, 3)})
             full_text = " ".join(w["text"] for w in words)
             ocr_time = time.time() - t_ocr
-            
+
             # Camera vs digital
             img_type = classify_camera_digital(caption)
-            
+
             results[fname] = {
                 "blip_caption": caption,
                 "blip_time": round(blip_time, 2),
@@ -192,7 +197,7 @@ def run_local_pipeline(image_paths):
         except Exception as e:
             results[fname] = {"error": str(e)}
             print(f"ERROR: {e}")
-    
+
     return results
 
 # ═══════════════════════════════════════════════════════════════
@@ -202,15 +207,15 @@ def run_openrouter(image_paths, api_key):
     print("\n" + "=" * 70)
     print("PHASE 3: OpenRouter gpt-4o Ground Truth")
     print("=" * 70)
-    
+
     import urllib.request as ureq
-    
+
     results = {}
-    
+
     for i, img_path in enumerate(image_paths):
         fname = Path(img_path).name
         print(f"  [{i+1:2d}/{len(image_paths)}] {fname} ...", end=" ", flush=True)
-        
+
         try:
             # Read and encode image
             img = Image.open(img_path)
@@ -219,13 +224,13 @@ def run_openrouter(image_paths, api_key):
             if max(w, h) > 2000:
                 scale = 2000 / max(w, h)
                 img = img.resize((int(w*scale), int(h*scale)), Image.LANCZOS)
-            
+
             buf = io.BytesIO()
             fmt = 'PNG' if img.mode == 'RGBA' else 'JPEG'
             img.convert('RGB').save(buf, format=fmt, quality=85)
             b64 = base64.b64encode(buf.getvalue()).decode()
             mime = f"image/{fmt.lower()}"
-            
+
             # Call OpenRouter
             t0 = time.time()
             payload = json.dumps({
@@ -248,20 +253,20 @@ def run_openrouter(image_paths, api_key):
                 "max_tokens": 300,
                 "temperature": 0
             }).encode()
-            
+
             req = ureq.Request("https://openrouter.ai/api/v1/chat/completions",
                 data=payload,
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 })
-            
+
             with ureq.urlopen(req, timeout=60) as resp:
                 data = json.loads(resp.read())
-            
+
             elapsed = time.time() - t0
             content = data["choices"][0]["message"]["content"]
-            
+
             # Parse JSON response
             try:
                 # Strip possible markdown wrapping
@@ -272,7 +277,7 @@ def run_openrouter(image_paths, api_key):
                 parsed = json.loads(content.strip())
             except json.JSONDecodeError:
                 parsed = {"raw": content, "caption": content, "type": "unknown", "has_text": False, "text_content": "", "main_subject": "unknown"}
-            
+
             results[fname] = {
                 "caption": parsed.get("caption", ""),
                 "type": parsed.get("type", "unknown"),
@@ -282,15 +287,15 @@ def run_openrouter(image_paths, api_key):
                 "time": round(elapsed, 2),
             }
             print(f"{elapsed:.1f}s [{parsed.get('type','?')}] '{parsed.get('caption','')[:60]}...'")
-            
+
             # Rate limit: 1 call per second
             time.sleep(0.3)
-            
+
         except Exception as e:
             results[fname] = {"error": str(e)}
             print(f"ERROR: {e}")
             time.sleep(1)
-    
+
     return results
 
 # ═══════════════════════════════════════════════════════════════
@@ -300,7 +305,7 @@ def compare_and_report(local_results, openrouter_results):
     print("\n" + "=" * 70)
     print("PHASE 4: Comparison Report")
     print("=" * 70)
-    
+
     report = {
         "total": 0,
         "blip_caption_match": 0,
@@ -312,11 +317,11 @@ def compare_and_report(local_results, openrouter_results):
         "ocr_has_text_miss": 0,
         "details": [],
     }
-    
+
     for fname in sorted(local_results.keys()):
         local = local_results.get(fname, {})
         orouter = openrouter_results.get(fname, {})
-        
+
         if "error" in local or "error" in orouter:
             report["details"].append({
                 "file": fname,
@@ -324,13 +329,13 @@ def compare_and_report(local_results, openrouter_results):
                 "error_orouter": orouter.get("error", ""),
             })
             continue
-        
+
         report["total"] += 1
-        
+
         # ── Caption match quality ──
         local_cap = local.get("blip_caption", "").lower()
         or_cap = orouter.get("caption", "").lower()
-        
+
         # Simple word overlap check for caption matching
         local_words = set(local_cap.split())
         or_words = set(or_cap.split())
@@ -338,7 +343,7 @@ def compare_and_report(local_results, openrouter_results):
             overlap = len(local_words & or_words) / max(len(local_words), len(or_words))
         else:
             overlap = 0
-        
+
         if overlap >= 0.4:
             caption_match = "match"
             report["blip_caption_match"] += 1
@@ -348,7 +353,7 @@ def compare_and_report(local_results, openrouter_results):
         else:
             caption_match = "miss"
             report["blip_caption_miss"] += 1
-        
+
         # ── Camera vs digital match ──
         local_type = local.get("camera_digital", "unknown")
         or_type = orouter.get("type", "unknown")
@@ -357,7 +362,7 @@ def compare_and_report(local_results, openrouter_results):
             report["camera_digital_match"] += 1
         else:
             report["camera_digital_miss"] += 1
-        
+
         # ── OCR text detection match ──
         local_has_text = local.get("doctr_words", 0) > 0
         or_has_text = orouter.get("has_text", False)
@@ -366,7 +371,7 @@ def compare_and_report(local_results, openrouter_results):
             report["ocr_has_text_match"] += 1
         else:
             report["ocr_has_text_miss"] += 1
-        
+
         report["details"].append({
             "file": fname,
             "blip_caption": local.get("blip_caption", ""),
@@ -383,45 +388,45 @@ def compare_and_report(local_results, openrouter_results):
             "doctr_text": local.get("doctr_text", ""),
             "or_text": orouter.get("text_content", ""),
         })
-    
+
     # ── Print Summary ──
     n = report["total"]
     print(f"\n  Total images compared: {n}")
-    print(f"\n  ── BLIP Caption vs gpt-4o ──")
+    print("\n  ── BLIP Caption vs gpt-4o ──")
     print(f"  Match:      {report['blip_caption_match']:3d} ({report['blip_caption_match']/n*100:.1f}%)")
     print(f"  Partial:    {report['blip_caption_partial']:3d} ({report['blip_caption_partial']/n*100:.1f}%)")
     print(f"  Miss:       {report['blip_caption_miss']:3d} ({report['blip_caption_miss']/n*100:.1f}%)")
     print(f"  → Useful:   {report['blip_caption_match']+report['blip_caption_partial']:3d} ({(report['blip_caption_match']+report['blip_caption_partial'])/n*100:.1f}%)")
-    
-    print(f"\n  ── Camera vs Digital Detection ──")
+
+    print("\n  ── Camera vs Digital Detection ──")
     print(f"  Match:      {report['camera_digital_match']:3d} ({report['camera_digital_match']/n*100:.1f}%)")
     print(f"  Miss:       {report['camera_digital_miss']:3d} ({report['camera_digital_miss']/n*100:.1f}%)")
-    
-    print(f"\n  ── OCR: Text Detection (has text?) ──")
+
+    print("\n  ── OCR: Text Detection (has text?) ──")
     print(f"  Match:      {report['ocr_has_text_match']:3d} ({report['ocr_has_text_match']/n*100:.1f}%)")
     print(f"  Miss:       {report['ocr_has_text_miss']:3d} ({report['ocr_has_text_miss']/n*100:.1f}%)")
-    
+
     # Print misses
     if report["blip_caption_miss"] > 0:
-        print(f"\n  ── BLIP Caption Misses ──")
+        print("\n  ── BLIP Caption Misses ──")
         for d in report["details"]:
             if d.get("caption_match") == "miss":
                 print(f"    📷 {d['file']}")
                 print(f"       BLIP:    {d['blip_caption']}")
                 print(f"       gpt-4o:  {d['or_caption']}")
-    
+
     if report["camera_digital_miss"] > 0:
-        print(f"\n  ── Camera/Digital Misses ──")
+        print("\n  ── Camera/Digital Misses ──")
         for d in report["details"]:
             if not d.get("type_match", True):
                 print(f"    📷 {d['file']}: BLIP={d['local_type']} | gpt-4o={d['or_type']}")
                 print(f"       Caption: {d['blip_caption']}")
-    
+
     # Save report
     report_path = BENCH_DIR / "benchmark_report.json"
     report_path.write_text(json.dumps(report, indent=2))
     print(f"\n  📄 Full report saved: {report_path}")
-    
+
     return report
 
 # ═══════════════════════════════════════════════════════════════
@@ -433,16 +438,16 @@ if __name__ == '__main__':
     parser.add_argument('--phase', choices=['1','2','3','4','all'], default='all')
     parser.add_argument('--openrouter-key', default=None)
     args = parser.parse_args()
-    
+
     # Load API key
     api_key = args.openrouter_key
     if not api_key:
         key_file = Path(r'E:/hermes_tools/config/openrouter.key')
         if key_file.exists():
             api_key = key_file.read_text().strip()
-    
+
     phase = args.phase
-    
+
     # Phase 1: Download
     if phase in ('1', 'all'):
         downloaded = download_images()
@@ -450,9 +455,9 @@ if __name__ == '__main__':
             print("No images downloaded. Check network.")
             sys.exit(1)
     else:
-        downloaded = sorted([str(p) for p in BENCH_DIR.glob('*.jpg')] + 
+        downloaded = sorted([str(p) for p in BENCH_DIR.glob('*.jpg')] +
                            [str(p) for p in BENCH_DIR.glob('*.png')])
-    
+
     # Phase 2: Local pipeline
     local_results = {}
     if phase in ('2', 'all'):
@@ -463,7 +468,7 @@ if __name__ == '__main__':
         local_file = BENCH_DIR / "local_results.json"
         if local_file.exists():
             local_results = json.loads(local_file.read_text())
-    
+
     # Phase 3: OpenRouter
     or_results = {}
     if phase in ('3', 'all'):
@@ -477,7 +482,7 @@ if __name__ == '__main__':
         or_file = BENCH_DIR / "openrouter_results.json"
         if or_file.exists():
             or_results = json.loads(or_file.read_text())
-    
+
     # Phase 4: Compare
     if phase in ('4', 'all'):
         if local_results and or_results:

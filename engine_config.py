@@ -17,9 +17,9 @@ Usage:
   engine = get_or_prompt_engine(force='llava')    # CLI override
   engine = get_or_prompt_engine(interactive=False) # no prompt, just resolve
 """
+import json
 import os
 import sys
-import json
 
 # ── Config filenames (relative to repo root) ──
 
@@ -87,12 +87,12 @@ def read_permanent_config():
     path = _get_permanent_config_path()
     if os.path.exists(path):
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 data = json.load(f)
             engine = data.get('engine', 'auto')
             if engine in ('blip', 'llava'):
                 return engine
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
     return 'auto'
 
@@ -145,7 +145,7 @@ def read_session_state():
     if not os.path.exists(path):
         return None
     try:
-        with open(path, 'r') as f:
+        with open(path) as f:
             data = json.load(f)
         engine = data.get('engine', '')
         pid = data.get('pid', 0)
@@ -156,7 +156,7 @@ def read_session_state():
             return engine
         # PID is dead — clean up stale session file
         os.remove(path)
-    except (json.JSONDecodeError, IOError, OSError):
+    except (json.JSONDecodeError, OSError):
         pass
     return None
 
@@ -244,7 +244,7 @@ def prompt_user_for_engine():
     if has_gpu:
         print(f"  \u2705 GPU detected: {gpu_name} ({vram_gb} GB VRAM)")
     else:
-        print(f"  \u26a0\ufe0f  No GPU detected — running on CPU")
+        print("  \u26a0\ufe0f  No GPU detected — running on CPU")
 
     print()
     print("  Select your description preference and duration:")
@@ -291,7 +291,7 @@ def prompt_user_for_engine():
                 if not has_gpu and choice in ('2', '4', '6'):
                     print("  \u274c LLaVA requires a GPU — only BLIP (SHORT) options are available.")
                 else:
-                    print(f"  Please enter a number between 1 and 6.")
+                    print("  Please enter a number between 1 and 6.")
                 continue
 
             # Map choice to (engine, scope)
@@ -499,27 +499,27 @@ def print_engine_recommendation():
     if has_gpu:
         print(f"  \u2705 CUDA GPU detected: {gpu_name} ({vram_gb} GB VRAM)")
         print()
-        print(f"  \U0001f4cc Recommended: LLaVA-1.5-7B (4-bit)")
-        print(f"     \u2022 Rich, detailed multi-paragraph descriptions")
-        print(f"     \u2022 Can identify colors, objects, spatial relationships, motion")
-        print(f"     \u2022 ~4GB VRAM usage, ~14s per image")
+        print("  \U0001f4cc Recommended: LLaVA-1.5-7B (4-bit)")
+        print("     \u2022 Rich, detailed multi-paragraph descriptions")
+        print("     \u2022 Can identify colors, objects, spatial relationships, motion")
+        print("     \u2022 ~4GB VRAM usage, ~14s per image")
         print()
-        print(f"  \u26a1 Alternative: BLIP-base")
-        print(f"     \u2022 Fast, short captions (5-15 words)")
-        print(f"     \u2022 Works on CPU, ~1GB model, 0.8s per image")
+        print("  \u26a1 Alternative: BLIP-base")
+        print("     \u2022 Fast, short captions (5-15 words)")
+        print("     \u2022 Works on CPU, ~1GB model, 0.8s per image")
     else:
-        print(f"  \u26a0\ufe0f  No CUDA GPU detected")
+        print("  \u26a0\ufe0f  No CUDA GPU detected")
         print()
-        print(f"  \U0001f4cc Recommended: BLIP-base")
-        print(f"     \u2022 Fast, short captions (5-15 words)")
-        print(f"     \u2022 Works on CPU, ~1GB model, 0.8s per image")
+        print("  \U0001f4cc Recommended: BLIP-base")
+        print("     \u2022 Fast, short captions (5-15 words)")
+        print("     \u2022 Works on CPU, ~1GB model, 0.8s per image")
 
     # Show permanent config
     perm = read_permanent_config()
     if perm in ('blip', 'llava'):
         path = _get_permanent_config_path()
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 data = json.load(f)
             saved_at = data.get('saved_at', 'unknown')
         except Exception:
@@ -536,11 +536,11 @@ def print_engine_recommendation():
         print(f"  \U0001f4bb Session preference: {label} (active)")
 
     print()
-    print(f"  \U0001f4a1 Quick commands:")
-    print(f"     python analyze_image.py <image> --engine llava")
-    print(f"     python analyze_image.py <image> --engine blip")
-    print(f"     python analyze_image.py <image>              (uses saved preferences)")
-    print(f"     python analyze_image.py --reset-preference   (clear all)")
+    print("  \U0001f4a1 Quick commands:")
+    print("     python analyze_image.py <image> --engine llava")
+    print("     python analyze_image.py <image> --engine blip")
+    print("     python analyze_image.py <image>              (uses saved preferences)")
+    print("     python analyze_image.py --reset-preference   (clear all)")
     print("=" * 60)
 
 

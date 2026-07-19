@@ -6,3 +6,8 @@ temp/
 .env
 engine_preference.json
 .hermes_session
+.pytest_cache/
+benchmark/test_images/
+benchmark/results.json
+benchmark/*.pdf
+__pycache__/

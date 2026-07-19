@@ -10,12 +10,15 @@ Usage:
   engine = LLaVAEngine()
   description = engine.describe(image_path, detail="rich")
 """
-import os, time, torch
-from PIL import Image
+import os
+import time
+
+import torch
+
 
 class LLaVAEngine:
     """LLaVA-1.5-7B vision-language model for detailed image descriptions."""
-    
+
     def __init__(self, cache_dir=None, load_in_4bit=True):
         """
         Initialize LLaVA engine.
@@ -32,12 +35,12 @@ class LLaVAEngine:
         self.model = None
         self.processor = None
         self._loaded = False
-    
+
     def _resolve_model_path(self):
         """Resolve the actual model path from HF cache (handles Windows symlink issues)."""
         model_id = "llava-hf/llava-1.5-7b-hf"
         # Try to find the snapshot in cache
-        cache_model_dir = os.path.join(self.cache_dir, "hub", 
+        cache_model_dir = os.path.join(self.cache_dir, "hub",
                                        f"models--{model_id.replace('/', '--')}")
         refs_file = os.path.join(cache_model_dir, "refs", "main")
         if os.path.exists(refs_file):
@@ -48,18 +51,18 @@ class LLaVAEngine:
                 return snapshot_dir
         # Fall back to model ID (will try to download)
         return model_id
-    
+
     def load(self):
         """Load the LLaVA model."""
         if self._loaded:
             return
-        
+
         model_path = self._resolve_model_path()
         print("Loading LLaVA-1.5-7B...", end=" ", flush=True)
         t0 = time.time()
-        
-        from transformers import LlavaForConditionalGeneration, AutoProcessor
-        
+
+        from transformers import AutoProcessor, LlavaForConditionalGeneration
+
         if self.load_in_4bit:
             from transformers import BitsAndBytesConfig
             quant_config = BitsAndBytesConfig(
@@ -82,17 +85,17 @@ class LLaVAEngine:
                 torch_dtype=torch.float16,
                 local_files_only=True,
             )
-        
+
         self.processor = AutoProcessor.from_pretrained(
             model_path,
             local_files_only=True,
         )
-        
+
         self._loaded = True
         vram = torch.cuda.memory_allocated(0) / 1024**3 if torch.cuda.is_available() else 0
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"done ({time.time()-t0:.1f}s, {vram:.1f}GB VRAM)")
-    
+
     def unload(self):
         """Free GPU memory."""
         if self.model:
@@ -103,21 +106,12 @@ class LLaVAEngine:
             self.processor = None
         self._loaded = False
         torch.cuda.empty_cache()
-    
+
     def _load_image(self, image_path):
-        """Load image, handling alpha channels."""
-        img = Image.open(image_path)
-        if img.mode in ('LA', 'PA'):
-            bg = Image.new('L', img.size, 255)
-            alpha = img.getchannel('A')
-            bg.paste(alpha, mask=alpha)
-            return bg.convert('RGB')
-        elif img.mode in ('RGBA', 'RGBa'):
-            bg = Image.new('RGB', img.size, (255, 255, 255))
-            bg.paste(img, mask=img.split()[3])
-            return bg
-        return img.convert('RGB')
-    
+        """Load image, handling alpha channels. Delegates to shared utility."""
+        from image_utils import load_image_safely
+        return load_image_safely(image_path)
+
     def describe(self, image_path, detail="rich", max_tokens=300):
         """
         Generate a detailed description of an image.
@@ -132,7 +126,7 @@ class LLaVAEngine:
         """
         if not self._loaded:
             self.load()
-        
+
         prompts = {
             "rich": (
                 "USER: <image>\nDescribe this image in rich detail. "
@@ -156,11 +150,11 @@ class LLaVAEngine:
                 "ASSISTANT:"
             ),
         }
-        
+
         prompt = prompts.get(detail, detail)
         img = self._load_image(image_path)
         inputs = self.processor(text=prompt, images=img, return_tensors="pt").to(self._device)
-        
+
         t0 = time.time()
         with torch.no_grad():
             output = self.model.generate(
@@ -170,43 +164,43 @@ class LLaVAEngine:
                 do_sample=True,
                 top_p=0.9,
             )
-        
+
         desc = self.processor.decode(output[0], skip_special_tokens=True)
         # Extract assistant response
         if "ASSISTANT:" in desc:
             desc = desc.split("ASSISTANT:")[-1].strip()
-        
+
         elapsed = time.time() - t0
         vram = torch.cuda.memory_allocated(0) / 1024**3 if torch.cuda.is_available() else 0
-        
+
         # Free temporary tensors from this inference to prevent VRAM fragmentation
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        
+
         return {
             "engine": "LLaVA-1.5-7B (4-bit)",
             "description": desc,
             "time_seconds": round(elapsed, 2),
             "vram_gb": round(vram, 2),
         }
-    
+
     def ask(self, image_path, question, max_tokens=200):
         """Ask a specific question about an image."""
         if not self._loaded:
             self.load()
-        
+
         prompt = f"USER: <image>\n{question}\nASSISTANT:"
         img = self._load_image(image_path)
         inputs = self.processor(text=prompt, images=img, return_tensors="pt").to(self._device)
-        
+
         t0 = time.time()
         with torch.no_grad():
             output = self.model.generate(**inputs, max_new_tokens=max_tokens)
-        
+
         answer = self.processor.decode(output[0], skip_special_tokens=True)
         if "ASSISTANT:" in answer:
             answer = answer.split("ASSISTANT:")[-1].strip()
-        
+
         return {
             "question": question,
             "answer": answer,
@@ -244,7 +238,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: python llava_engine.py <image_path> [detail_level]")
         sys.exit(1)
-    
+
     engine = LLaVAEngine()
     result = engine.describe(sys.argv[1], detail=sys.argv[2] if len(sys.argv) > 2 else "rich")
     print(f"\n{'='*60}")

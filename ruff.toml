@@ -1,0 +1,42 @@
+# Ruff configuration for Hermes Image Analysis
+# https://docs.astral.sh/ruff/configuration/
+
+target-version = "py311"
+
+line-length = 100
+
+[lint]
+select = [
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "W",     # pycodestyle warnings
+    "I",     # isort (import ordering)
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "C4",    # flake8-comprehensions
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+    "N818",  # exception class name should end with "Error"
+    "N999",  # repo dir name contains hyphens (not a package)
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"image_utils.py" = ["F401"]
+"keyword_generator.py" = ["ALL"]
+"keywords_10m.py" = ["ALL"]
+"mega_keywords.py" = ["ALL"]
+"super_scale_keywords.py" = ["ALL"]
+"multi_classifier.py" = ["ALL"]
+"benchmark/*" = ["ALL"]
+"tests/*" = ["S101", "B011", "F401"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

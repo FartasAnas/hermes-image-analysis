@@ -334,7 +334,6 @@ def synthesize(state):
 
 def debug_dump(state):
     """Print all raw engine outputs in the old fragmented format."""
-    import textwrap
     lines = []
     lines.append("=" * 70)
     lines.append("  DEBUG — RAW ENGINE OUTPUTS")
@@ -361,14 +360,14 @@ def debug_dump(state):
 
     classification = state.get("classification", {})
     if classification:
-        lines.append(f"\n  ── Classification ──")
+        lines.append("\n  ── Classification ──")
         for dim, labs in sorted(classification.items()):
             if labs:
                 lines.append(f"    {dim}: {', '.join(labs)}")
 
     pixel = state.get("pixel", {})
     if pixel:
-        lines.append(f"\n  ── Pixel Analysis ──")
+        lines.append("\n  ── Pixel Analysis ──")
         if pixel.get("dominant_colors"):
             dc = [f"{c['name']} #{c['hex']} {c['percentage']:.0f}%"
                   for c in pixel["dominant_colors"][:5]]
@@ -385,7 +384,7 @@ def debug_dump(state):
 
     flags = state.get("flags", {})
     if flags.get("technical_screenshot"):
-        lines.append(f"\n  ── Cross-Engine Flags ──")
+        lines.append("\n  ── Cross-Engine Flags ──")
         lines.append(f"    Technical Screenshot: YES (confidence: {flags.get('tech_confidence', 0):.0%})")
         lines.append(f"    Signals: {', '.join(flags.get('tech_signals', []))}")
 
