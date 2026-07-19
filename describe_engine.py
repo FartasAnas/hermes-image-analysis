@@ -1,238 +1,412 @@
-def generate_detailed_description(blip_caption, labels=None, metadata=None):
+"""
+Synthesis Engine — Unified Multi-Engine Output Generator
+=========================================================
+Fuses vision (BLIP/LLaVA), OCR (DocTR), pixel analysis, and MAX classifier
+outputs into a SINGLE flowing natural-language paragraph.
+
+Key capabilities:
+  - Cross-engine intelligence: detects technical screenshots from OCR text
+  - Hallucination suppression: filters LLaVA visual false-positives on terminal shots
+  - Unified JSON state: all engine payloads merged into one structured object
+  - Debug mode: raw engine outputs available behind --debug flag
+
+Architecture:
+  analyze_image.py → runs engines → builds JSON state → describe_engine.synthesize()
+"""
+
+# ═══════════════════════════════════════════════════════════
+# TECHNICAL SCREENSHOT DETECTION
+# ═══════════════════════════════════════════════════════════
+
+TECH_SIGNALS = [
+    # Shell / CLI commands
+    "curl", "bash", "npm", "pip", "uv ", "git ", "python", "docker",
+    "sudo", "apt-get", "chmod", "ssh", "scp", "wget", "make", "gcc",
+    # Windows paths and commands
+    "C:\\", "D:\\", "E:\\", "C:/", "D:/", "E:/",
+    "cmd.exe", "powershell", "msbuild", "dotnet",
+    # Programming tokens
+    "def ", "import ", "class ", "function", "const ", "let ", "var ",
+    "return", "print(", "console.", "<?php", "#!/",
+    "True", "False", "None", "__", "lambda",
+    # Error / log patterns
+    "error:", "warning:", "traceback", "exception",
+    "stack trace", "line ", "column ",
+    "failed", "timeout", "connection refused",
+    # Package managers / build tools
+    "cargo", "go build", "mvn ", "gradle", "yarn", "npx",
+    "node ", "tsc ", "webpack", "eslint",
+    # Config / env
+    "export ", "PATH=", "HOME=", "env ",
+    # Database / API
+    "SELECT ", "INSERT ", "UPDATE ", "DELETE ",
+    "mysql", "postgres", "mongodb", "redis",
+    "localhost", "127.0.0.1", ":8080", ":3000",
+    # Hermes-specific
+    "hermes", "analyze_image.py", "engine_config",
+]
+
+# LLaVA hallucination patterns to suppress on technical screenshots
+VISUAL_HALLUCINATION_SIGNALS = [
+    "face", "person", "people", "man", "woman", "child",
+    "outdoor", "nature", "landscape", "mountain", "forest",
+    "beach", "ocean", "river", "field of", "sky with",
+    "animal", "bird", "dog", "cat", "tree", "flower",
+    "building", "street", "car ",
+    "headphone", "phone", "cell phone",
+    "art", "artwork", "painting", "drawing",
+]
+
+
+def detect_technical_screenshot(ocr_text):
     """
-    Generates a rich, natural-language description from BLIP caption
-    and MAX classifier labels. Produces flowing paragraphs, not lists.
+    Analyze OCR text for system/terminal signals.
+
+    Returns (is_technical: bool, confidence: float, matched_signals: list)
     """
-    if labels is None:
+    if not ocr_text or not ocr_text.strip():
+        return False, 0.0, []
+
+    lower = ocr_text.lower()
+    matched = []
+
+    for signal in TECH_SIGNALS:
+        if signal.lower() in lower:
+            matched.append(signal)
+
+    if not matched:
+        return False, 0.0, []
+
+    # Confidence: ratio of matched signals, capped at 1.0
+    confidence = min(len(matched) / 3.0, 1.0)
+    return True, confidence, matched
+
+
+def _suppress_hallucinations(description, ocr_text):
+    """
+    If the image is a technical screenshot, strip visual hallucination
+    patterns from the vision description and replace with terminal framing.
+    """
+    is_tech, confidence, signals = detect_technical_screenshot(ocr_text)
+
+    if not is_tech or confidence < 0.3:
+        return description, False
+
+    lower_desc = description.lower()
+    has_hallucination = any(
+        signal in lower_desc for signal in VISUAL_HALLUCINATION_SIGNALS
+    )
+
+    if not has_hallucination:
+        return description, is_tech
+
+    # Build sanitized technical description
+    cmd_hints = [s for s in signals if s in [
+        "curl", "bash", "git", "python", "npm", "pip", "docker",
+        "uv ", "node", "cargo", "mvn", "gradle",
+    ]]
+
+    if cmd_hints:
+        context = f"This appears to be a terminal or command-line screenshot showing output from {'/'.join(cmd_hints[:3])}."
+    else:
+        context = "This appears to be a terminal or command-line screenshot."
+
+    return context, is_tech
+
+
+# ═══════════════════════════════════════════════════════════
+# UNIFIED JSON STATE BUILDER
+# ═══════════════════════════════════════════════════════════
+
+def build_state(meta, vision_result=None, ocr_result=None,
+                pixel_result=None, engine_used="blip"):
+    """
+    Merge all engine outputs into a single structured JSON state object.
+
+    Args:
+        meta: dict from analyze_metadata()
+        vision_result: dict from run_vision() / run_llava() / run_blip()
+        ocr_result: dict from run_doctr() or run_easyocr()
+        pixel_result: dict from analyze_pixels()
+        engine_used: 'blip' or 'llava'
+
+    Returns:
+        dict with unified state
+    """
+    state = {
+        "meta": meta or {},
+        "engine": engine_used,
+        "vision": {},
+        "ocr": {},
+        "pixel": {},
+        "classification": {},
+        "flags": {},
+    }
+
+    # Vision
+    if vision_result:
+        caption = vision_result.get("caption", "")
+        state["vision"] = {
+            "caption": caption,
+            "engine": vision_result.get("engine", "unknown"),
+            "time_s": vision_result.get("time_seconds", 0),
+            "vram_gb": vision_result.get("vram_gb", 0),
+        }
+
+        # MAX classification
         try:
             from max_classifier import classify_image
-            labels = classify_image(blip_caption)
+            state["classification"] = classify_image(caption)
         except ImportError:
-            return blip_caption
-    
-    source = labels.get('source', ['unknown'])
-    source = source[0] if source else 'unknown'
-    subjects = labels.get('subject', [])
-    colors = labels.get('color', [])
-    text_info = labels.get('text', [])
-    setting = labels.get('setting', [])
-    environment = labels.get('environment', [])
-    composition = labels.get('composition', [])
-    mood = labels.get('mood', [])
-    pattern = labels.get('pattern', [])
-    material = labels.get('material', [])
-    style = labels.get('style', [])
-    lighting = labels.get('lighting', [])
-    weather = labels.get('weather', [])
-    time_of_day = labels.get('time_of_day', [])
-    
-    # Flatten nested labels
-    def flatten(labels_list):
-        if not labels_list:
-            return []
-        result = []
-        for item in labels_list:
-            if isinstance(item, list):
-                result.extend(flatten(item))
-            else:
-                result.append(str(item).replace('_', ' '))
-        return result
-    
-    subjects_flat = flatten(subjects)
-    
-    paragraphs = []
-    
-    # ═══════════════════════════════════════════════════════════
-    # PARAGRAPH 1: What the image shows (main content)
-    # ═══════════════════════════════════════════════════════════
-    p1_parts = []
-    
-    # Clean up BLIP caption for natural reading
-    caption = blip_caption.strip()
-    if caption.startswith("this is a picture of"):
-        caption = caption.replace("this is a picture of", "The image shows")
-    elif caption.startswith("a detailed view of"):
-        caption = caption.replace("a detailed view of", "This is a detailed view of")
-    elif caption.startswith("the image shows"):
-        pass  # Already good
-    elif caption.startswith("a "):
-        caption = "The image depicts " + caption
+            pass
+
+    # OCR
+    if ocr_result:
+        full_text = ocr_result.get("full_text", "")
+        state["ocr"] = {
+            "full_text": full_text,
+            "word_count": ocr_result.get("word_count", 0),
+            "avg_confidence": ocr_result.get("avg_confidence", 0),
+            "engine": ocr_result.get("engine", "unknown"),
+            "words": ocr_result.get("words", []),
+        }
+
+        # Technical screenshot detection
+        is_tech, tech_conf, tech_signals = detect_technical_screenshot(full_text)
+        state["flags"]["technical_screenshot"] = is_tech
+        state["flags"]["tech_confidence"] = round(tech_conf, 2)
+        state["flags"]["tech_signals"] = tech_signals[:10]  # top 10
+
+    # Pixel analysis
+    if pixel_result:
+        state["pixel"] = {
+            "dominant_colors": pixel_result.get("dominant_colors", []),
+            "vibrancy": pixel_result.get("vibrancy", ""),
+            "brightness_desc": pixel_result.get("brightness_desc", ""),
+            "contrast": pixel_result.get("contrast", {}),
+            "motion_effect": pixel_result.get("motion_effect", ""),
+        }
+
+    return state
+
+
+# ═══════════════════════════════════════════════════════════
+# UNIFIED SYNTHESIS — single flowing paragraph
+# ═══════════════════════════════════════════════════════════
+
+def synthesize(state):
+    """
+    Produce ONE unified natural-language paragraph from all engine outputs.
+
+    This replaces the old fragmented output (separate headings for Vision,
+    OCR, Pixel Analysis, Structured Summary) with a single flowing description
+    that merges visual content, text extraction, colors, and mood.
+
+    Args:
+        state: dict from build_state()
+
+    Returns:
+        str: unified description paragraph
+    """
+    parts = []
+
+    vision = state.get("vision", {})
+    ocr = state.get("ocr", {})
+    pixel = state.get("pixel", {})
+    classification = state.get("classification", {})
+    flags = state.get("flags", {})
+    meta = state.get("meta", {})
+
+    caption = vision.get("caption", "").strip()
+    ocr_text = ocr.get("full_text", "").strip()
+    is_tech = flags.get("technical_screenshot", False)
+
+    # ═══ STEP 1: Vision description (with hallucination suppression) ═══
+    if caption:
+        processed_caption, was_suppressed = _suppress_hallucinations(
+            caption, ocr_text
+        )
+        # Clean up common LLaVA prefixes
+        for prefix in ["the image shows ", "the image showcases ",
+                       "the image depicts ", "this image shows "]:
+            if processed_caption.lower().startswith(prefix):
+                processed_caption = processed_caption[len(prefix):]
+                processed_caption = processed_caption[0].upper() + processed_caption[1:]
+                break
+        parts.append(processed_caption.rstrip("."))
     else:
-        caption = "The image shows " + caption
-    
-    # Capitalize first letter
-    caption = caption[0].upper() + caption[1:]
-    if not caption.endswith('.'):
-        caption += '.'
-    
-    p1_parts.append(caption)
-    
-    # Source type
-    if source in ('digital_abstract', 'diagram'):
-        p1_parts.append("This is a digitally created or computer-generated composition.")
-    elif source == 'screenshot':
-        p1_parts.append("This appears to be a screenshot or digital interface capture.")
-    elif source == 'painting':
-        p1_parts.append("This is a painting, executed in traditional or digital media.")
-    elif source == 'illustration':
-        p1_parts.append("This is an illustration or graphic artwork.")
-    elif source == 'drawing':
-        p1_parts.append("This appears to be a drawing, sketch, or hand-rendered artwork.")
-    elif source == 'map':
-        p1_parts.append("This is a map or cartographic representation.")
-    
-    paragraphs.append(" ".join(p1_parts))
-    
-    # ═══════════════════════════════════════════════════════════
-    # PARAGRAPH 2: Visual details — colors, lighting, composition
-    # ═══════════════════════════════════════════════════════════
-    p2_parts = []
-    
-    # Colors with specific descriptions
-    if colors:
-        warm_colors = [c for c in colors if c in ('warm_tones',)]
-        cool_colors = [c for c in colors if c in ('cool_tones',)]
-        dark_colors = [c for c in colors if c in ('dark_dim',)]
-        bright_colors = [c for c in colors if c in ('bright_light',)]
-        vibrant_colors = [c for c in colors if c in ('vibrant_colorful',)]
-        mono_colors = [c for c in colors if c in ('monochrome_bw',)]
-        contrast_colors = [c for c in colors if c in ('high_contrast',)]
-        
-        color_phrases = []
-        if vibrant_colors:
-            color_phrases.append("vibrant, saturated colors dominate the scene")
-        if warm_colors and cool_colors:
-            color_phrases.append("a mix of warm red-orange tones and cool blue-purple hues")
-        elif warm_colors:
-            color_phrases.append("warm tones of red, orange, and gold are prominent")
-        elif cool_colors:
-            color_phrases.append("cool tones of blue, purple, and teal set the palette")
-        if dark_colors:
-            color_phrases.append("set against a dark, deep background")
-        if bright_colors:
-            color_phrases.append("with bright, well-illuminated areas")
-        if mono_colors:
-            color_phrases.append("presented in black and white or monochrome")
-        if contrast_colors:
-            color_phrases.append("featuring strong contrast between light and shadow")
-        
-        if color_phrases:
-            p2_parts.append("The color palette features " + ", ".join(color_phrases) + ".")
-    
-    # Lighting
-    if lighting:
-        light_str = ", ".join(l.replace('_', ' ') for l in lighting)
-        p2_parts.append(f"The lighting is {light_str}.")
-    
-    # Composition
-    if composition:
-        comp_str = ", ".join(c.replace('_', ' ') for c in composition)
-        p2_parts.append(f"The composition employs a {comp_str} perspective.")
-    
-    # Patterns
-    if pattern:
-        pat_str = ", ".join(p.replace('_', ' ') for p in pattern)
-        p2_parts.append(f"Notable visual patterns include {pat_str}.")
-    
-    if p2_parts:
-        paragraphs.append(" ".join(p2_parts))
-    
-    # ═══════════════════════════════════════════════════════════
-    # PARAGRAPH 3: Subject matter and environment
-    # ═══════════════════════════════════════════════════════════
-    p3_parts = []
-    
-    if subjects_flat:
-        # Group subjects thematically
-        space_terms = {'space astronomy', 'stars astronomy', 'space', 'astronomy', 'planet', 'star'}
-        network_terms = {'network technology', 'network', 'connected', 'web', 'lines'}
-        nature_terms = {'plant', 'animal', 'bird', 'fish', 'insect', 'landscape', 'flower'}
-        human_terms = {'person', 'people', 'man', 'woman', 'child'}
-        building_terms = {'building', 'architecture', 'structure', 'house'}
-        tech_terms = {'technology', 'device', 'computer', 'screen', 'phone'}
-        
-        subject_sets = []
-        for s in subjects_flat:
-            for term_set, label in [(space_terms, 'celestial or astronomical'),
-                                     (network_terms, 'network or digital connectivity'),
-                                     (nature_terms, 'natural or botanical'),
-                                     (human_terms, 'human or portrait'),
-                                     (building_terms, 'architectural or structural'),
-                                     (tech_terms, 'technological or electronic')]:
-                if s in term_set:
-                    if label not in [x[0] for x in subject_sets]:
-                        subject_sets.append((label, []))
-                    for name, lst in subject_sets:
-                        if name == label:
-                            lst.append(s)
-        
-        if subject_sets:
-            for label, items in subject_sets:
-                p3_parts.append(f"The image contains {label} elements" + 
-                              (f" including {', '.join(items)}" if items else "") + ".")
-    
-    if setting:
-        p3_parts.append(f"The setting is {', '.join(s.replace('_',' ') for s in setting)}.")
-    
-    if environment:
-        env_str = ", ".join(e.replace('_', ' ') for e in environment)
-        p3_parts.append(f"The environment is characterized as {env_str}.")
-    
-    if material:
-        mat_str = ", ".join(m.replace('_', ' ') for m in material)
-        p3_parts.append(f"Notable materials and textures include {mat_str}.")
-    
-    if weather:
-        p3_parts.append(f"Weather conditions appear to be {', '.join(w.replace('_',' ') for w in weather)}.")
-    
-    if time_of_day:
-        p3_parts.append(f"The time of day is {', '.join(t.replace('_',' ') for t in time_of_day)}.")
-    
-    if p3_parts:
-        paragraphs.append(" ".join(p3_parts))
-    
-    # ═══════════════════════════════════════════════════════════
-    # PARAGRAPH 4: Mood, style, themes
-    # ═══════════════════════════════════════════════════════════
-    p4_parts = []
-    
+        parts.append("An image")
+
+    # ═══ STEP 2: Source/type context ═══
+    source = classification.get("source", ["unknown"])
+    source = source[0] if source else "unknown"
+
+    if is_tech:
+        pass  # already handled in _suppress_hallucinations
+    elif source == "screenshot":
+        parts.append("This appears to be a screenshot or interface capture")
+    elif source == "digital_abstract":
+        parts.append("It is digitally created or computer-generated")
+    elif source == "painting":
+        parts.append("It is a painting")
+    elif source == "illustration":
+        parts.append("It is an illustration")
+    elif source == "drawing":
+        parts.append("It appears to be a drawing or sketch")
+    elif source == "diagram":
+        parts.append("It is a diagram or chart")
+
+    # ═══ STEP 3: Text content (from OCR) ═══
+    if ocr_text and not is_tech:
+        word_count = ocr.get("word_count", 0)
+        conf = ocr.get("avg_confidence", 0)
+        if word_count > 5 and conf > 0.4:
+            # Human-readable text found — incorporate a sample
+            sample = ocr_text[:200].strip()
+            parts.append(f"Visible text reads: \"{sample}\"")
+        elif word_count > 0:
+            parts.append("Some visible text or labels are present")
+    elif is_tech and ocr_text:
+        # Technical screenshot — show commands
+        sample = ocr_text[:300].strip()
+        if len(sample) > 10:
+            parts.append(f"The terminal output includes: \"{sample}\"")
+
+    # ═══ STEP 4: Color, light, composition ═══
+    color_parts = []
+    if pixel.get("vibrancy"):
+        color_parts.append(pixel["vibrancy"])
+    if pixel.get("brightness_desc"):
+        color_parts.append(f"the exposure is {pixel['brightness_desc']}")
+
+    dominant = pixel.get("dominant_colors", [])
+    if dominant:
+        names = [f"{c['name']} ({c['percentage']:.0f}%)" for c in dominant[:4]
+                 if c.get("percentage", 0) > 2]
+        if names:
+            color_parts.append(f"dominant hues are {', '.join(names)}")
+
+    contrast = pixel.get("contrast", {})
+    if contrast.get("level") == "very high":
+        color_parts.append("with very high contrast")
+    elif contrast.get("level") == "high":
+        color_parts.append("with strong contrast")
+
+    if pixel.get("motion_effect"):
+        color_parts.append(f"there is a {pixel['motion_effect']}")
+
+    if color_parts:
+        parts.append("The image is " + "; ".join(color_parts))
+
+    # ═══ STEP 5: Mood, style, setting ═══
+    mood = classification.get("mood", [])
+    style = classification.get("style", [])
+    setting = classification.get("setting", [])
+
+    context = []
     if mood:
-        mood_str = ", ".join(m.replace('_', ' ') for m in mood)
-        p4_parts.append(f"The overall mood is {mood_str}.")
-    
+        context.append(f"the mood is {', '.join(m.replace('_',' ') for m in mood)}")
     if style:
-        style_str = ", ".join(s.replace('_', ' ') for s in style)
-        p4_parts.append(f"The visual style can be described as {style_str}.")
-    
-    if p4_parts:
-        paragraphs.append(" ".join(p4_parts))
-    
-    # ═══════════════════════════════════════════════════════════
-    # PARAGRAPH 5: Text and metadata
-    # ═══════════════════════════════════════════════════════════
-    p5_parts = []
-    
-    if text_info:
-        if 'has_text' in text_info:
-            if 'text_heavy' in text_info:
-                p5_parts.append("The image contains a substantial amount of visible text or typographic content.")
-                if 'sign_present' in text_info:
-                    p5_parts.append("Signage, labels, or banners with text are visible.")
-            else:
-                p5_parts.append("Some text or lettering is visible within the image.")
-        else:
-            p5_parts.append("No visible text, labels, or writing appears in the image.")
-    else:
-        p5_parts.append("No visible text or lettering is present.")
-    
-    if metadata:
-        dims = metadata.get('dimensions', '')
-        kb = metadata.get('file_size_kb', '')
-        brightness = metadata.get('avg_brightness', '')
-        if dims:
-            p5_parts.append(f"Technical details: {dims} pixels, {kb}KB file size, average brightness {brightness}/255.")
-    
-    if p5_parts:
-        paragraphs.append(" ".join(p5_parts))
-    
-    return "\n\n".join(paragraphs)
+        context.append(f"the style is {', '.join(s.replace('_',' ') for s in style)}")
+    if setting:
+        context.append(f"set in a {', '.join(s.replace('_',' ') for s in setting)} context")
+
+    if context:
+        parts.append("; ".join(context))
+
+    # ═══ STEP 6: Metadata ═══
+    dims = meta.get("dimensions", "")
+    kb = meta.get("file_size_kb", 0)
+    brightness = meta.get("avg_brightness", 0)
+    if dims:
+        parts.append(f"[{dims}, {kb}KB, brightness {brightness}/255]")
+
+    # ═══ Assembly ═══
+    paragraph = ". ".join(p for p in parts if p).replace("..", ".")
+    if not paragraph.endswith("."):
+        paragraph += "."
+
+    return paragraph
+
+
+# ═══════════════════════════════════════════════════════════
+# DEBUG DUMP — raw engine outputs (behind --debug)
+# ═══════════════════════════════════════════════════════════
+
+def debug_dump(state):
+    """Print all raw engine outputs in the old fragmented format."""
+    import textwrap
+    lines = []
+    lines.append("=" * 70)
+    lines.append("  DEBUG — RAW ENGINE OUTPUTS")
+    lines.append("=" * 70)
+
+    vision = state.get("vision", {})
+    if vision.get("caption"):
+        lines.append(f"\n  ── Vision ({vision.get('engine', '')}) ──")
+        cap = vision["caption"]
+        if len(cap) > 800:
+            cap = cap[:800] + "..."
+        lines.append(f"  {cap}")
+
+    ocr = state.get("ocr", {})
+    if ocr.get("words"):
+        lines.append(f"\n  ── OCR ({ocr.get('engine', '')}) ──")
+        lines.append(f"  Words: {ocr['word_count']} | Confidence: {ocr['avg_confidence']:.0%}")
+        for w in sorted(ocr["words"], key=lambda x: x["confidence"], reverse=True)[:15]:
+            bar = "\u2588" * int(w["confidence"] * 20)
+            lines.append(f"    [{w['confidence']:.0%}] {w['text']} {bar}")
+        full = ocr.get("full_text", "")
+        if full:
+            lines.append(f"\n  Full text: {full[:500]}")
+
+    classification = state.get("classification", {})
+    if classification:
+        lines.append(f"\n  ── Classification ──")
+        for dim, labs in sorted(classification.items()):
+            if labs:
+                lines.append(f"    {dim}: {', '.join(labs)}")
+
+    pixel = state.get("pixel", {})
+    if pixel:
+        lines.append(f"\n  ── Pixel Analysis ──")
+        if pixel.get("dominant_colors"):
+            dc = [f"{c['name']} #{c['hex']} {c['percentage']:.0f}%"
+                  for c in pixel["dominant_colors"][:5]]
+            lines.append(f"    Colors: {', '.join(dc)}")
+        if pixel.get("vibrancy"):
+            lines.append(f"    Vibrancy: {pixel['vibrancy']}")
+        if pixel.get("brightness_desc"):
+            lines.append(f"    Exposure: {pixel['brightness_desc']}")
+        if pixel.get("motion_effect"):
+            lines.append(f"    Motion: {pixel['motion_effect']}")
+        c = pixel.get("contrast", {})
+        if c:
+            lines.append(f"    Contrast: {c.get('level', '?')} (\u03c3={c.get('std_dev', '?')})")
+
+    flags = state.get("flags", {})
+    if flags.get("technical_screenshot"):
+        lines.append(f"\n  ── Cross-Engine Flags ──")
+        lines.append(f"    Technical Screenshot: YES (confidence: {flags.get('tech_confidence', 0):.0%})")
+        lines.append(f"    Signals: {', '.join(flags.get('tech_signals', []))}")
+
+    lines.append(f"\n{'=' * 70}")
+    return "\n".join(lines)
+
+
+# ═══════════════════════════════════════════════════════════
+# Legacy compatibility wrapper
+# ═══════════════════════════════════════════════════════════
+
+def generate_detailed_description(blip_caption, labels=None, metadata=None):
+    """
+    Legacy wrapper — retained for backward compatibility.
+    New code should use build_state() + synthesize() instead.
+    """
+    state = build_state(
+        meta=metadata or {},
+        vision_result={"caption": blip_caption, "engine": "BLIP"},
+    )
+    if labels:
+        state["classification"] = labels
+    return synthesize(state)

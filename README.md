@@ -75,7 +75,8 @@ analyze_image.py (Main Pipeline)
 ├── 📊 Analysis
 │   ├── MAX Classifier        → 34 dimensions, 11.5M keywords, inverted-index O(1) lookup
 │   ├── Pixel Analysis        → Vectorized NumPy HSV, color extraction, motion detection
-│   └── Describe Engine       → Natural language multi-paragraph output
+│   ├── Describe Engine       → Cross-engine synthesis with hallucination suppression
+│   └── Synthesis Layer       → Unified JSON state → single flowing natural-language paragraph
 │
 └── ⚙️ Configuration
     ├── hermes_config.py      → Dynamic drive detection (no hardcoded paths)
@@ -308,7 +309,27 @@ Two code reviews: 29 + 50 issues. All critical/high fixes applied.
 
 ## 📋 Changelog
 
-### v3.1 (Current — July 2026)
+### v3.3 (Current — July 2026)
+**Phase 3: Unified Synthesis Engine & Cross-Engine Intelligence**
+
+**New Features:**
+- **Unified synthesis layer:** All engine outputs (vision, OCR, pixel, classification) fused into a single flowing natural-language paragraph via `describe_engine.synthesize()`
+- **Cross-engine intelligence matrix:** Technical screenshot detection from OCR text (curl, bash, git, python, etc.) with automatic hallucination suppression — vision engine false-positives about "people" or "scenery" on terminal shots are filtered out
+- **`--debug` flag:** Raw engine outputs hidden behind optional flag; default output is one clean unified description
+- **JSON state object:** `build_state()` merges all engine payloads into a structured dict consumed by `synthesize()` and `debug_dump()`
+
+**Behavioral Changes:**
+- Default output: one paragraph merging visual description + text content + colors + mood + metadata
+- Old multi-section report (Vision / OCR / Pixel / Structured Summary) only shown with `--debug`
+- OCR text below 5 words with low confidence no longer forced into inline output
+
+### v3.2 (July 2026)
+**Granular engine scope — photo/session/permanent**
+- 6-option interactive menu: [1][2] photo-only, [3][4] session-only, [5][6] permanent
+- `.hermes_session` with PID liveness check for session-scoped preferences
+- `HERMES_NON_INTERACTIVE=1` env var + TTY detection prevents agent-mode hangs
+
+### v3.1 (July 2026)
 **Phase 12: Interactive Prompting & Deep Optimization**
 
 **New Features:**

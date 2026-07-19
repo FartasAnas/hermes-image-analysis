@@ -270,6 +270,8 @@ if __name__ == '__main__':
                        help='Show GPU info and engine recommendation, then exit')
     parser.add_argument('--drive', default=None, help='Storage drive (e.g., D:, E:, /mnt/data). Auto-detected if not set.')
     parser.add_argument('--force-cpu', action='store_true', help='Disable GPU even if available')
+    parser.add_argument('--debug', action='store_true',
+                       help='Show raw engine outputs alongside unified description')
     args = parser.parse_args()
     
     # --show-engines: display recommendation and exit
@@ -358,66 +360,45 @@ if __name__ == '__main__':
                 print(f"❌ {e}")
 
     # ═══════════════════════════════════════════════════════
-    # REPORT
+    # UNIFIED SYNTHESIS (Phase 3 — single flowing description)
     # ═══════════════════════════════════════════════════════
+
+    # Build unified JSON state from all engine outputs
+    from describe_engine import build_state, synthesize, debug_dump
+
+    ocr_for_state = results.get('doctr') or results.get('easyocr')
+    vision_for_state = results.get('vision')
+    pixel_for_state = None
+
+    try:
+        from pixel_analysis import analyze_pixels
+        pixel_for_state = analyze_pixels(image_path)
+    except (ImportError, Exception):
+        pass
+
+    state = build_state(
+        meta=meta,
+        vision_result=vision_for_state,
+        ocr_result=ocr_for_state,
+        pixel_result=pixel_for_state,
+        engine_used=chosen_engine,
+    )
+
+    # ── UNIFIED OUTPUT ──
     print(f"\n{'=' * 70}")
-    print("                   ANALYSIS REPORT")
+    print("                   UNIFIED ANALYSIS")
     print(f"{'=' * 70}")
+    print()
 
-    if 'vision' in results:
-        import textwrap
-        print(f"\n  ── {'LLaVA' if chosen_engine == 'llava' else 'BLIP'} Description ──")
-        caption = results['vision']['caption']
-        # Truncate very long descriptions for display
-        if len(caption) > 800:
-            caption = caption[:800] + "..."
-        print(f"  \U0001f4dd {caption}")
+    unified = synthesize(state)
+    import textwrap
+    for line in textwrap.wrap(unified, width=65):
+        print(f"  {line}")
 
-        # Detailed structured description
-        try:
-            from max_classifier import classify_image
-            from describe_engine import generate_detailed_description
-            labels = classify_image(caption)
-            detailed = generate_detailed_description(caption, labels, meta)
+    # ── DEBUG: raw engine outputs ──
+    if args.debug:
+        print()
+        print(debug_dump(state))
 
-            # Pixel analysis for color/motion details
-            try:
-                from pixel_analysis import analyze_pixels, pixel_analysis_to_text
-                pixel = analyze_pixels(image_path)
-                pixel_txt = pixel_analysis_to_text(pixel)
-                print(f"\n  ── Pixel Analysis ──")
-                for line in textwrap.wrap(pixel_txt, width=65):
-                    print(f"  {line}")
-            except ImportError:
-                pass
-            print(f"\n  ── Structured Summary ──")
-            for line in textwrap.wrap(detailed, width=65):
-                print(f"  {line}")
-        except ImportError:
-            pass
-
-    for eng in ['doctr', 'easyocr']:
-        if eng not in results:
-            continue
-        r = results[eng]
-        print(f"\n  ── Text found ({r['engine']}) ──")
-        if r['word_count']:
-            for w in sorted(r['words'], key=lambda x: x['confidence'], reverse=True)[:20]:
-                bar = "█" * int(w['confidence'] * 20)
-                print(f"    [{w['confidence']:.0%}] {w['text']} {bar}")
-            if r['word_count'] > 20:
-                print(f"    ... and {r['word_count'] - 20} more words")
-            print(f"\n  Full text: {r['full_text'][:500]}")
-        else:
-            print(f"  (no text detected)")
-
-    if 'doctr' in results and 'easyocr' in results:
-        d, e = results['doctr'], results['easyocr']
-        print(f"\n  ── OCR Comparison ──")
-        print(f"  {'':<20} {'DocTR':>10} {'EasyOCR':>10}")
-        print(f"  {'Words':<20} {d['word_count']:>10} {e['word_count']:>10}")
-        print(f"  {'Confidence':<20} {d['avg_confidence']:>9.0%} {e['avg_confidence']:>9.0%}")
-        print(f"  {'Speed':<20} {d['time_seconds']:>9}s {e['time_seconds']:>9}s")
-
-    print(f"\n  🏠 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print(f"\n  \U0001f3e0 100% LOCAL — zero API calls, zero rate limits, zero cost")
     print(f"{'=' * 70}")
