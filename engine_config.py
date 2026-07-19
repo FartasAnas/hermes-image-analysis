@@ -374,6 +374,44 @@ def resolve_engine(force=None):
     return recommended
 
 
+def _is_interactive():
+    """
+    True if the user can actually respond to prompts.
+
+    Checks (in order):
+      1. HERMES_NON_INTERACTIVE=1 env var → False (agent override)
+      2. Python's -i flag / PYTHONINSPECT → True
+      3. sys.__stdin__.isatty() → True/False (original fd, before redirects)
+      4. sys.stdin.isatty() → True/False (current fd, may be piped)
+
+    Returns False for: pipes, redirects, agent tool calls, cron, subprocess w/out PTY.
+    Returns True for: real terminal, interactive python, PTY sessions.
+    """
+    # Explicit agent override
+    if os.environ.get('HERMES_NON_INTERACTIVE', '').strip() in ('1', 'true', 'yes'):
+        return False
+
+    # Python was started with -i (interactive) or PYTHONINSPECT is set
+    if hasattr(sys, 'ps1') or os.environ.get('PYTHONINSPECT'):
+        return True
+
+    # Original stdin fd (before any potential redirection by subprocess)
+    try:
+        if sys.__stdin__.isatty():
+            return True
+    except Exception:
+        pass
+
+    # Current stdin fd
+    try:
+        if sys.stdin.isatty():
+            return True
+    except Exception:
+        pass
+
+    return False
+
+
 def get_or_prompt_engine(force=None, interactive=True):
     """
     Primary entry point — resolve engine, prompting interactively if needed.
@@ -409,11 +447,14 @@ def get_or_prompt_engine(force=None, interactive=True):
         return session_engine
 
     # No saved preference of any kind
-    if interactive:
+    if interactive and _is_interactive():
         engine, scope = prompt_user_for_engine()
         return engine
 
-    # Non-interactive fallback
+    # Non-interactive fallback (no TTY, --no-prompt, or interactive=False)
+    if interactive and not _is_interactive():
+        print("  ℹ️  Non-interactive mode (no TTY). Use --engine blip|llava or save a"
+              " permanent preference to skip this warning.", file=sys.stderr)
     recommended, _reason = detect_best_engine()
     return recommended
 
