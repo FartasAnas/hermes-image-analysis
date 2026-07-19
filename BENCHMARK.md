@@ -266,3 +266,45 @@ Key design decisions:
 | **Color** | Palette classification | **85.7%** (18/21) |
 | **BLIP Caption** | Useful vs ground truth | **91.5%** (54/59) |
 | **DocTR OCR** | Text presence detection | 85.7% (from Phase 7) |
+
+---
+
+## Phase 9: MAX Classifier — 34 Dimensions, 37K Keywords (July 2026)
+
+**Goal:** Build the most comprehensive BLIP caption classifier possible — no limits on dimensions or keywords.
+
+### Scale
+
+| Metric | Value |
+|--------|-------|
+| **Dimensions** | 34 (source, setting, environment, subject, composition, color, text, mood, time_of_day, season, weather, style, texture, depth, lighting, temperature, direction, action, scale, symmetry, density, material, pattern, humidity, quality, age_era, orientation, camera_distance, naturalness, complexity, sound, smell, taste, touch) |
+| **Total Keywords** | **37,342** (programmatically generated from seed terms via `keyword_generator.py`) |
+| **Labels per image** | 3.0 dimensions, 3.6 labels (average) |
+| **Keyword generation** | Seeds → expanded via plurals, prefixes/suffixes, BLIP common patterns, adjectives, verb combinations |
+
+### Final Accuracy (59 images)
+
+| Metric | Accuracy | Notes |
+|--------|----------|-------|
+| 📷 **Camera vs Digital** | **94.9%** (56/59) | 3 unfixable — BLIP sees synthetic as real photos |
+| 📝 **Text Detection** | **100%** (12/12) | Perfect |
+| 🎨 **Color Detection** | **85.7%** (18/21) | Warm/cool/vibrant/dark/bright/monochrome |
+| 🔖 **Source Detection** | **91.2%** (31/34) | Non-photo source correctly identified |
+| 🧠 **BLIP Caption Useful** | **91.5%** (54/59) | vs ground truth |
+
+### Architecture
+
+- **`keyword_generator.py`**: Massive keyword database with `expand_keywords()` engine
+- **`max_classifier.py`**: Classification engine with word-boundary matching, multi-word phrases, derived rules, and override system
+- Two-pass classification: keyword matching → derived rules → override corrections
+- Derived rules: building → architectural, food → indoor, vehicle → outdoor
+- Override system catches false positives (e.g., "desktop computer" photo ≠ digital)
+
+### The 3 Unfixable Misses
+
+BLIP describes synthetic images as real photos:
+- "a green field with a blue sky and a white dot" (synthetic field)
+- "a red barn with a brown roof" (synthetic house)
+- "a yellow flower with a brown center" (synthetic flower)
+
+These are BLIP-base model limitations — only a better vision model can fix them.

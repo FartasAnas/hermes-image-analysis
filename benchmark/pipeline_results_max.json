@@ -1,0 +1,3240 @@
+[
+  {
+    "filename": "gt_warning_sign.png",
+    "blip_caption": "a yellow background with the words warning high voltage keep",
+    "ground_truth_description": "A yellow warning sign with black text reading 'WARNING: High Voltage - Keep Out'. Digital text on solid background.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "warm"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "warm_tones"
+      ],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 5,
+    "doctr_text": "WARNING: High Voltage Keep Ou",
+    "doctr_avg_confidence": 0.992
+  },
+  {
+    "filename": "gt_error_screen.png",
+    "blip_caption": "system error system error system error system error system error system error system error system error",
+    "ground_truth_description": "A blue error screen with white text displaying a system error message. Digital screenshot style with error code.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 8,
+    "doctr_text": "SYSTEM ERROR Code: 0x000000FE Please restart your computer",
+    "doctr_avg_confidence": 0.955
+  },
+  {
+    "filename": "gt_sale_banner.png",
+    "blip_caption": "flash sale up to 70 % off",
+    "ground_truth_description": "A bright orange-red sale banner with white text advertising a flash sale with 70% discount. Digital banner style.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "warm"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 7,
+    "doctr_text": "FLASH SALE! 70% OFF Limited Time Only",
+    "doctr_avg_confidence": 0.967
+  },
+  {
+    "filename": "gt_menu_board.png",
+    "blip_caption": "a green menu with a pizza and a pizza sign",
+    "ground_truth_description": "A dark green menu board with beige text listing food items and prices including pizza, pasta, salad, and cheesecake.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "food",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [
+        "indoor"
+      ],
+      "environment": [],
+      "subject": [
+        "food_drink",
+        "text_document_content"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "sign_present",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 13,
+    "doctr_text": "TODAY'S SPECIALS Pizza Margherita $12 Pasta Carbonara $14 Caesar Salad $9 Cheesecake $7",
+    "doctr_avg_confidence": 0.938
+  },
+  {
+    "filename": "gt_code_snippet.png",
+    "blip_caption": "a black background with green text that reads, ' defaci if return '",
+    "ground_truth_description": "A code editor showing a Python function that computes Fibonacci numbers. Green monospace text on a dark background.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "text_document_content"
+      ],
+      "composition": [],
+      "color": [
+        "dark_dim"
+      ],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 9,
+    "doctr_text": "def fibonacci(n): in< 18 return return fibonacci(n-1) fibonacci(n-2) print(fibonacci(10)",
+    "doctr_avg_confidence": 0.791
+  },
+  {
+    "filename": "gt_weather_app.png",
+    "blip_caption": "a blue background with a white font and a black font",
+    "ground_truth_description": "A weather app interface mockup showing sunny weather at 72 degrees Fahrenheit with a 5-day forecast including sun, cloud, and rain icons.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones"
+      ],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 16,
+    "doctr_text": "WEATHER Sunny 72\u00b0F/22\u00b0C Humidity: 45% Wind: mph Forecast: Mon 00 74\u00b0 Tue 68\u00b0 Wed 00 62\u00b0",
+    "doctr_avg_confidence": 0.911
+  },
+  {
+    "filename": "gt_receipt.png",
+    "blip_caption": "the price for the new store at the mall",
+    "ground_truth_description": "A store receipt on white paper with black text listing grocery items including milk, bread, eggs, and butter with prices and total.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "food",
+      "color": "bright"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [
+        "indoor"
+      ],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 19,
+    "doctr_text": "STORE MART 123 Main Street Milk 1gal $4.99 Bread $3.49 Eggs 12pk $5.99 Butter $2.99 TOTAL: $17.46 Thank you!",
+    "doctr_avg_confidence": 0.895
+  },
+  {
+    "filename": "gt_game_over.png",
+    "blip_caption": "game over score 1 / 4 / 5 / 5 / 6 / 5 / 6 / 6 / 6 / 6 / 6 / 6 / 6",
+    "ground_truth_description": "A game over screen with red text on a black background showing a score of 12,450 points. Video game style.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 8,
+    "doctr_text": "GAME OVER Score: 12,450 Press START to continue",
+    "doctr_avg_confidence": 0.967
+  },
+  {
+    "filename": "gt_sunset_sky.png",
+    "blip_caption": "a purple and orange gradient background",
+    "ground_truth_description": "A smooth gradient simulating a sunset sky transitioning from deep orange at the horizon to purple and dark blue at the top.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "warm"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones",
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_ocean_waves.png",
+    "blip_caption": "a blue background with a white border",
+    "ground_truth_description": "A gradient abstract image simulating ocean water transitioning from light turquoise at the top to deep navy blue at the bottom.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_forest_canopy.png",
+    "blip_caption": "a green background with a black border",
+    "ground_truth_description": "A gradient abstract image simulating a forest canopy with various shades of green from light lime to dark evergreen.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "plant",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_desert_dunes.png",
+    "blip_caption": "a brown and yellow gradient gradient background",
+    "ground_truth_description": "A gradient abstract image simulating desert sand dunes with warm tan, golden brown, and terracotta tones.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "warm"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_night_sky.png",
+    "blip_caption": "a dark blue background with stars",
+    "ground_truth_description": "A dark gradient simulating a night sky with scattered small white dots as stars on a deep navy to black background.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [
+        "outer_space"
+      ],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones",
+        "dark_dim"
+      ],
+      "text": [],
+      "mood": [
+        "gloomy"
+      ],
+      "time_of_day": [
+        "night"
+      ],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_aurora_borealis.png",
+    "blip_caption": "a dark blue background with a diagonal stripe",
+    "ground_truth_description": "A colorful abstract gradient simulating the aurora borealis with wavy bands of green, purple, and teal light on a dark sky.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones",
+        "dark_dim"
+      ],
+      "text": [],
+      "mood": [
+        "gloomy"
+      ],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [
+        "striped"
+      ],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_checkerboard.png",
+    "blip_caption": "a black and white checkered pattern",
+    "ground_truth_description": "A black and white checkerboard pattern with alternating dark and light squares arranged in an 8 by 8 grid.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "monochrome"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "monochrome_bw"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [
+        "checkered"
+      ],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_concentric_circles.png",
+    "blip_caption": "a circle with a rainbow colored center",
+    "ground_truth_description": "An abstract pattern of concentric circles in rainbow colors radiating from the center like a target or ripple pattern.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "vibrant_colorful"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [
+        "rainy"
+      ],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [
+        "centered"
+      ],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_colorful_triangles.png",
+    "blip_caption": "a colorful abstract design",
+    "ground_truth_description": "A mosaic of colorful triangles in red, blue, yellow, green, and purple arranged in a geometric low-poly pattern.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "vibrant_colorful"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [
+        "abstract"
+      ],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_striped_pattern.png",
+    "blip_caption": "a colorful striped pattern with black and yellow stripes",
+    "ground_truth_description": "A pattern of vertical stripes alternating between cyan, magenta, yellow, and black creating a bold linear design.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "vibrant_colorful"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [
+        "striped"
+      ],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_polka_dots.png",
+    "blip_caption": "a colorful polka dot pattern",
+    "ground_truth_description": "A pattern of uniformly spaced polka dots in various bright colors on a white background creating a playful design.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "vibrant_colorful"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [
+        "dotted"
+      ],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_grid_lines.png",
+    "blip_caption": "a graph paper with a grid pattern",
+    "ground_truth_description": "A precise grid of thin gray lines on a white background creating a sheet of graph paper or architectural blueprint appearance.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "bright"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "paper"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_bar_chart.png",
+    "blip_caption": "a bar chart with the same color",
+    "ground_truth_description": "A simple bar chart showing sales data with four colored bars of different heights. The first bar is red and tallest, the second is blue, third green, fourth yellow.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "has_text": false,
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [
+        "indoor"
+      ],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_pie_chart.png",
+    "blip_caption": "a pie chart with the percentage of the percentage of the percentage of the percentage of the percentage of the percentage",
+    "ground_truth_description": "A pie chart divided into four colored segments: blue (40%), red (30%), green (20%), and yellow (10%), with labels for each segment.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "has_text": true,
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [
+        "indoor"
+      ],
+      "environment": [],
+      "subject": [
+        "food_drink"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 6,
+    "doctr_text": "Blue 40% Red 30% Green 20%",
+    "doctr_avg_confidence": 0.987
+  },
+  {
+    "filename": "gt_venn_diagram.png",
+    "blip_caption": "two circles with one red and one blue",
+    "ground_truth_description": "A Venn diagram showing two overlapping circles, one red and one blue, with a purple overlapping region in the center.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_flowchart.png",
+    "blip_caption": "a diagram showing the different stages of the process",
+    "ground_truth_description": "A simple flowchart with four boxes connected by arrows: Start (green box), Process (blue box), Decision (yellow diamond), and End (red box).",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 4,
+    "doctr_text": "START PROCESS OK? END",
+    "doctr_avg_confidence": 0.976
+  },
+  {
+    "filename": "gt_blue_sky_clouds.png",
+    "blip_caption": "a blue background with a white cloud",
+    "ground_truth_description": "A simple digital image of a bright blue sky with several white fluffy clouds scattered across it.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_green_field.png",
+    "blip_caption": "a green field with a blue sky and a white dot",
+    "ground_truth_description": "A simple digital image of a green grassy field under a light blue sky with a few clouds on the horizon.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "landscape",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "cool_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [
+        "sunny"
+      ],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_simple_house.png",
+    "blip_caption": "a red barn with a brown roof",
+    "ground_truth_description": "A simple drawing of a small red house with a triangular brown roof, a door, and two windows, sitting on green grass under a blue sky.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "building",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [
+        "architectural",
+        "rural"
+      ],
+      "subject": [
+        "building_structure"
+      ],
+      "composition": [],
+      "color": [
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_simple_flower.png",
+    "blip_caption": "a yellow flower with a brown center",
+    "ground_truth_description": "A simple digital illustration of a yellow sunflower with a brown center, green stem, and two green leaves on a white background.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "plant",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [
+        "centered"
+      ],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_calculator_ui.png",
+    "blip_caption": "a screenshote keyboard with the keyboard button highlighted",
+    "ground_truth_description": "A calculator app interface with a display showing the number 42, and buttons for digits 0-9 and operations plus, minus, multiply, and divide.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 1,
+    "doctr_text": "42",
+    "doctr_avg_confidence": 1.0
+  },
+  {
+    "filename": "gt_chat_interface.png",
+    "blip_caption": "the text message dial on the phone",
+    "ground_truth_description": "A messaging app interface with a blue header, three text message bubbles in a conversation, and a text input field at the bottom.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "has_text": true,
+      "subject": "text",
+      "color": "cool"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device",
+        "text_document_content"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [
+        "has_text",
+        "text_heavy"
+      ],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 11,
+    "doctr_text": "Messages Hey! How are you? 'm good, thanks! Wanttograbcoffee? Type message...",
+    "doctr_avg_confidence": 0.851
+  },
+  {
+    "filename": "gt_rainbow_gradient.png",
+    "blip_caption": "a rainbow colored background",
+    "ground_truth_description": "A horizontal gradient transitioning through all colors of the rainbow from red to orange to yellow to green to blue to purple.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [
+        "vibrant_colorful",
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [
+        "rainy"
+      ],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_dark_minimal.png",
+    "blip_caption": "a black background with a white and red flower",
+    "ground_truth_description": "A completely black rectangular image with no visible features, representing pure darkness or an empty void.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "dark"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [
+        "dark_dim",
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_bright_white.png",
+    "blip_caption": "a white and black striped rug with a white border",
+    "ground_truth_description": "A completely bright white rectangular image with no visible features, representing a blank canvas or pure light.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "bright"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [
+        "striped"
+      ],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "gt_color_swatches.png",
+    "blip_caption": "a television screen with a rainbow colored screen",
+    "ground_truth_description": "A grid of six color swatches showing solid blocks of red, blue, green, yellow, purple, and orange in two rows.",
+    "ground_truth_categories": {
+      "source": "digital",
+      "subject": "abstract",
+      "color": "vibrant"
+    },
+    "predicted_categories": {
+      "source": [
+        "digital_abstract"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [
+        "vibrant_colorful"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [
+        "rainy"
+      ],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_001.jpg",
+    "blip_caption": "a man sitting at a table using a laptop",
+    "ground_truth_description": "A person is using a laptop at an outdoor table with a smartphone and notebook nearby.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "person",
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_010.jpg",
+    "blip_caption": "a view of the ocean from a hill",
+    "ground_truth_description": "A scenic view of a forest with a distant ocean and mountains under a clear blue sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine",
+        "natural_wilderness"
+      ],
+      "subject": [
+        "landscape_scenery"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_011.jpg",
+    "blip_caption": "a river in the middle of a forest",
+    "ground_truth_description": "A serene landscape featuring a winding river through a lush green valley with forested hills in the background.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [
+        "centered"
+      ],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_012.jpg",
+    "blip_caption": "rocks on the beach",
+    "ground_truth_description": "A rocky beach with distant islands under a clear sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine"
+      ],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_013.jpg",
+    "blip_caption": "a beach with rocks and trees on the shore",
+    "ground_truth_description": "A rocky beach with driftwood and trees along the shoreline under a clear blue sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine",
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_014.jpg",
+    "blip_caption": "a rocky beach with rocks and water",
+    "ground_truth_description": "A rocky shoreline with a calm sea under a clear sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine"
+      ],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone",
+        "watery"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_015.jpg",
+    "blip_caption": "a waterfall in the middle of a rocky area",
+    "ground_truth_description": "A serene waterfall cascades down a rocky cliff surrounded by lush greenery.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone",
+        "watery"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [
+        "centered"
+      ],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_016.jpg",
+    "blip_caption": "a view of the ocean from the rocks",
+    "ground_truth_description": "A scenic view of a calm lake with rocky shore and distant hills under a clear blue sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine",
+        "natural_wilderness"
+      ],
+      "subject": [
+        "landscape_scenery"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_020.jpg",
+    "blip_caption": "a desk with a laptop, notebook, and other items",
+    "ground_truth_description": "A workspace with a laptop, books, and an open notebook displaying logos and a smartphone. Various stationery items are also present on the desk.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 7,
+    "doctr_text": "mirt POs Poa Quark Ca MC conEdison",
+    "doctr_avg_confidence": 0.583
+  },
+  {
+    "filename": "p7_picsum_021.jpg",
+    "blip_caption": "a pair of white shoes sitting on a wooden floor",
+    "ground_truth_description": "A pair of white high-heeled shoes placed on a wooden surface with a red, paint-splattered background.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "group_of_people"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "wooden"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "wood"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_022.jpg",
+    "blip_caption": "a man walking across a street",
+    "ground_truth_description": "A person in a suit walks across an empty street.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [],
+      "subject": [
+        "person"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_023.jpg",
+    "blip_caption": "fork greeting card featuring the photograph fork by person",
+    "ground_truth_description": "A close-up image of three metallic forks arranged in a crisscross pattern.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "person"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_024.jpg",
+    "blip_caption": "an open book on a table",
+    "ground_truth_description": "An open book lies on a wooden surface, with pages slightly blurred.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "text_document_content"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_025.jpg",
+    "blip_caption": "a tree with a sun shining through it",
+    "ground_truth_description": "Silhouetted branches of a tree against a bright sky with the sun shining through.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_026.jpg",
+    "blip_caption": "a black bag with a phone, headphones, a wallet, and other items",
+    "ground_truth_description": "A neatly arranged collection of personal accessories including a wallet, sunglasses, bow tie, and headphones.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_027.jpg",
+    "blip_caption": "a man standing on a rock looking out at the ocean",
+    "ground_truth_description": "A person stands on a sandy shore fishing while the sun sets over the ocean.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine",
+        "natural_wilderness"
+      ],
+      "subject": [
+        "person"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "stone"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "stone"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_028.jpg",
+    "blip_caption": "a river in the mountains",
+    "ground_truth_description": "A lush green forest with a rocky stream flowing through it under a clear blue sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "mountainous",
+        "natural_wilderness"
+      ],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_029.jpg",
+    "blip_caption": "the snow covered mountains of the himalaya",
+    "ground_truth_description": "A breathtaking view of snow-covered mountains under a clear blue sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "mountainous",
+        "natural_wilderness"
+      ],
+      "subject": [],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [
+        "winter"
+      ],
+      "weather": [
+        "snowy"
+      ],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_030.jpg",
+    "blip_caption": "a coffee mug with a red and white design on it",
+    "ground_truth_description": "A white mug with a vintage Cuban stamp design on a textured surface.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "indoor"
+      ],
+      "environment": [],
+      "subject": [
+        "food_drink"
+      ],
+      "composition": [],
+      "color": [
+        "warm_tones"
+      ],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 5,
+    "doctr_text": "NIN ANOI CUBA COR SICENTENARIO",
+    "doctr_avg_confidence": 0.594
+  },
+  {
+    "filename": "p7_picsum_035.jpg",
+    "blip_caption": "a cactus cactus with yellow needles",
+    "ground_truth_description": "Close-up of a cactus with sharp, orange spines against a blurred background.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [
+        "natural_wilderness"
+      ],
+      "subject": [
+        "plant"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_040.jpg",
+    "blip_caption": "a close up of a cat ' s nose",
+    "ground_truth_description": "A close-up image of a cat's nose and mouth area.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "animal_mammal",
+        "body_part"
+      ],
+      "composition": [
+        "closeup_macro"
+      ],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [
+        "close_up"
+      ],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [
+        "close"
+      ],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_048.jpg",
+    "blip_caption": "a laptop on a wooden table",
+    "ground_truth_description": "A laptop sits on a wooden table in a cozy setting with a smartphone nearby.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "wooden"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [
+        "wood"
+      ],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_050.jpg",
+    "blip_caption": "a bird flying over a boat in the water",
+    "ground_truth_description": "A bird with outstretched wings perched on a rope by the water's edge.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [],
+      "subject": [
+        "bird",
+        "vehicle_transport"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "watery"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [
+        "flying"
+      ],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_060.jpg",
+    "blip_caption": "a desktop computer, keyboard, mouse, mouse pad, mouse pad, mouse pad, mouse pad, mouse pad, mouse pad, mouse pad",
+    "ground_truth_description": "A neatly arranged workspace featuring a computer monitor, keyboard, tablet, and other office accessories.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [],
+      "environment": [],
+      "subject": [
+        "animal_mammal",
+        "technology_device"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  },
+  {
+    "filename": "p7_picsum_100.jpg",
+    "blip_caption": "a beach with people walking and playing in the water",
+    "ground_truth_description": "A crowded beach with people swimming and relaxing under a hazy sky.",
+    "ground_truth_categories": {},
+    "predicted_categories": {
+      "source": [
+        "photo"
+      ],
+      "setting": [
+        "outdoor"
+      ],
+      "environment": [
+        "coastal_marine"
+      ],
+      "subject": [
+        "group_of_people"
+      ],
+      "composition": [],
+      "color": [],
+      "text": [],
+      "mood": [],
+      "time_of_day": [],
+      "season": [],
+      "weather": [],
+      "style": [],
+      "texture": [
+        "watery"
+      ],
+      "depth": [],
+      "lighting": [],
+      "temperature": [],
+      "direction": [],
+      "action": [],
+      "scale": [],
+      "symmetry": [],
+      "density": [],
+      "material": [],
+      "pattern": [],
+      "humidity": [],
+      "quality": [],
+      "age_era": [],
+      "orientation": [],
+      "camera_distance": [],
+      "naturalness": [],
+      "complexity": [],
+      "sound": [],
+      "smell": [],
+      "taste": [],
+      "touch": []
+    },
+    "doctr_words": 0,
+    "doctr_text": "",
+    "doctr_avg_confidence": 0
+  }
+]
