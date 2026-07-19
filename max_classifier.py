@@ -100,6 +100,9 @@ def _apply_derived_rules(results, lower, words):
             # Only digital when in screen context
             "screenshote", "screen with", "screen showing",
             "app interface", "user interface", "ui ",
+            # Maze/puzzle patterns (always digital/synthetic)
+            "maze", "circular maze", "labyrinth", "puzzle",
+            "with a white background", "with a black background",
         ]
         has_digital = any(ds in lower for ds in digital_signals)
         

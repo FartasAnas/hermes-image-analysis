@@ -228,6 +228,99 @@ def analyze_metadata(image_path):
     }
 
 # ═══════════════════════════════════════════════════════════
+# DETAILED DESCRIPTION GENERATOR
+# ═══════════════════════════════════════════════════════════
+
+def generate_detailed_description(blip_caption, labels=None):
+    """
+    Generates a rich multi-sentence description by combining
+    BLIP's caption with MAX classifier labels.
+    """
+    if labels is None:
+        try:
+            from max_classifier import classify_image
+            labels = classify_image(blip_caption)
+        except ImportError:
+            return blip_caption
+    
+    source = labels.get('source', ['unknown'])
+    source = source[0] if source else 'unknown'
+    subjects = labels.get('subject', [])
+    colors = labels.get('color', [])
+    text_info = labels.get('text', [])
+    setting = labels.get('setting', [])
+    environment = labels.get('environment', [])
+    composition = labels.get('composition', [])
+    mood = labels.get('mood', [])
+    pattern = labels.get('pattern', [])
+    material = labels.get('material', [])
+    style = labels.get('style', [])
+    lighting = labels.get('lighting', [])
+    
+    parts = [blip_caption.capitalize() + "."]
+    
+    source_descriptions = {
+        'photo': 'This appears to be a photograph.',
+        'digital_abstract': 'This is a digital or synthetic image.',
+        'painting': 'This is a painting.',
+        'drawing': 'This is a drawing or sketch.',
+        'illustration': 'This is an illustration.',
+        'diagram': 'This is a diagram or chart.',
+        'screenshot': 'This appears to be a screenshot or UI.',
+        'map': 'This is a map.',
+    }
+    if source in source_descriptions:
+        parts.append(source_descriptions[source])
+    
+    if subjects:
+        subject_str = ", ".join(s.replace('_', ' ') for s in subjects)
+        parts.append(f"The main subject appears to be: {subject_str}.")
+    
+    color_map = {
+        'warm_tones': 'warm tones (reds, oranges, yellows)',
+        'cool_tones': 'cool tones (blues, greens, purples)',
+        'dark_dim': 'a dark, dim palette',
+        'bright_light': 'a bright, well-lit palette',
+        'vibrant_colorful': 'vibrant, colorful tones',
+        'monochrome_bw': 'a black and white or monochrome palette',
+        'pastel': 'soft pastel colors',
+        'high_contrast': 'high contrast with deep shadows',
+    }
+    color_parts = [color_map[c] for c in colors if c in color_map]
+    if color_parts:
+        parts.append("The color palette features " + "; ".join(color_parts) + ".")
+    
+    if setting:
+        parts.append(f"The setting appears to be {', '.join(s.replace('_',' ') for s in setting)}.")
+    if environment:
+        parts.append(f"The environment is {', '.join(e.replace('_',' ') for e in environment)}.")
+    if composition:
+        parts.append(f"The composition uses a {', '.join(c.replace('_',' ') for c in composition)} perspective.")
+    if pattern:
+        parts.append(f"Visible patterns include {', '.join(p.replace('_',' ') for p in pattern)}.")
+    
+    if 'has_text' in text_info:
+        parts.append("The image contains visible text or lettering.")
+        if 'text_heavy' in text_info:
+            parts.append("The text content is substantial.")
+        if 'sign_present' in text_info:
+            parts.append("A sign or label is visible.")
+    else:
+        parts.append("No visible text or lettering is present.")
+    
+    if mood:
+        parts.append(f"The overall mood is {', '.join(m.replace('_',' ') for m in mood)}.")
+    if lighting:
+        parts.append(f"Lighting conditions: {', '.join(l.replace('_',' ') for l in lighting)}.")
+    if style:
+        parts.append(f"The visual style is {', '.join(s.replace('_',' ') for s in style)}.")
+    if material:
+        parts.append(f"Materials and textures present: {', '.join(m.replace('_',' ') for m in material)}.")
+    
+    return " ".join(parts)
+
+
+# ═══════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════
 if __name__ == '__main__':
@@ -309,6 +402,19 @@ if __name__ == '__main__':
     if 'blip' in results:
         print(f"\n  ── What's in this image? (BLIP) ──")
         print(f"  📝 {results['blip']['caption']}")
+        
+        # ── Detailed description (BLIP + MAX classifier) ──
+        try:
+            from max_classifier import classify_image
+            labels = classify_image(results['blip']['caption'])
+            detailed = generate_detailed_description(results['blip']['caption'], labels)
+            print(f"\n  ── Detailed Description ──")
+            # Word-wrap the detailed description
+            import textwrap
+            for line in textwrap.wrap(detailed, width=65):
+                print(f"  {line}")
+        except ImportError:
+            pass  # max_classifier not available — skip detailed description
 
     for eng in ['doctr', 'easyocr']:
         if eng not in results:
