@@ -14,19 +14,16 @@ Phases:
 import os, sys, time, json, base64, io, random
 from pathlib import Path
 
-# ── E: drive only ──
-os.environ['TMP'] = r'E:\hermes_tools\temp'
-os.environ['TEMP'] = r'E:\hermes_tools\temp'
-os.environ['HF_HOME'] = 'E:/hermes_tools/.hf'
-os.environ['DOCTR_CACHE_DIR'] = 'E:/hermes_tools/cache/doctr'
-os.environ['EASYOCR_MODULE_PATH'] = 'E:/hermes_tools/cache/easyocr'
-os.environ['XDG_CACHE_HOME'] = 'E:/hermes_tools/cache'
-os.environ['TORCH_HOME'] = 'E:/hermes_tools/cache/torch'
+# ── Dynamic config (no hardcoded paths) ──
+from hermes_config import setup_environment, get_storage_drive, get_temp_dir
+
+drive = get_storage_drive(auto=True)
+config = setup_environment(drive)
 
 import urllib.request
 from PIL import Image
 
-BENCH_DIR = Path(r'E:/hermes_tools/temp/benchmark_50')
+BENCH_DIR = Path(get_temp_dir(drive)) / 'benchmark_50'
 BENCH_DIR.mkdir(parents=True, exist_ok=True)
 
 # ═══════════════════════════════════════════════════════════════

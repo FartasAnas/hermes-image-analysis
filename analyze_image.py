@@ -17,26 +17,36 @@ Requirements (all local, no internet after first model download):
   - EasyOCR: ~100MB models (auto-downloaded on first run)
   - BLIP:    ~1GB model  (auto-downloaded on first run)
 
-E: drive only. Zero C: references.
+Storage: Automatically detects available drives (avoids C: on Windows).
+         Set --drive to override (e.g., --drive D:).
+GPU: Auto-detects CUDA/MPS. Use --force-cpu to disable.
 """
 import sys, os, time, argparse
 
-os.environ['TMP'] = r'E:\hermes_tools\temp'
-os.environ['TEMP'] = r'E:\hermes_tools\temp'
+# ── Dynamic config (no hardcoded paths) ──
+from hermes_config import setup_environment, gpu_available, gpu_info_str, get_storage_drive
 
 from PIL import Image
+
+# We'll set up env vars during main() after parsing args
 
 # ═══════════════════════════════════════════════════════════
 # ENGINE 1: DocTR OCR — PyTorch, db_resnet50 + crnn_vgg16_bn
 # ═══════════════════════════════════════════════════════════
-def run_doctr(image_path):
+def run_doctr(image_path, force_cpu=False):
     from doctr.io import DocumentFile
     from doctr.models import ocr_predictor
     t0 = time.time()
+    
+    has_gpu, device, _ = gpu_available()
+    if force_cpu:
+        has_gpu = False
+    
     model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
     doc = DocumentFile.from_images(image_path)
     result = model(doc)
     elapsed = time.time() - t0
+    
     words = []
     for page in result.pages:
         for block in page.blocks:
@@ -50,18 +60,26 @@ def run_doctr(image_path):
         "engine": "DocTR (db_resnet50 + crnn_vgg16_bn)",
         "words": words, "word_count": len(words), "full_text": full,
         "avg_confidence": round(sum(w["confidence"] for w in words) / len(words), 3) if words else 0,
-        "time_seconds": round(elapsed, 2)
+        "time_seconds": round(elapsed, 2),
+        "device": device if has_gpu else "cpu",
     }
 
 # ═══════════════════════════════════════════════════════════
 # ENGINE 2: EasyOCR — backup, CRAFT + CRNN
 # ═══════════════════════════════════════════════════════════
-def run_easyocr(image_path):
+def run_easyocr(image_path, force_cpu=False):
     import easyocr
     t0 = time.time()
-    reader = easyocr.Reader(['en'], gpu=False, verbose=False)
+    
+    has_gpu, device, gpu_name = gpu_available()
+    if force_cpu:
+        has_gpu = False
+        device = "cpu"
+    
+    reader = easyocr.Reader(['en'], gpu=has_gpu, verbose=False)
     results = reader.readtext(image_path, detail=1, paragraph=False)
     elapsed = time.time() - t0
+    
     words = []
     for entry in results:
         if len(entry) == 3:
@@ -78,7 +96,8 @@ def run_easyocr(image_path):
         "engine": "EasyOCR (CRAFT + CRNN)",
         "words": words, "word_count": len(words), "full_text": full,
         "avg_confidence": round(sum(w["confidence"] for w in words) / len(words), 3) if words else 0,
-        "time_seconds": round(elapsed, 2)
+        "time_seconds": round(elapsed, 2),
+        "device": device if has_gpu else "cpu",
     }
 
 # ═══════════════════════════════════════════════════════════
@@ -118,22 +137,17 @@ DIGITAL_KEYWORDS = [
     "product label", "advertisement", "screenshot", "graphic",
     "logo", "circuit", "chip", "microchip", "user interface", "ui",
     "poster", "banner", "sign", "menu", "diagram", "chart",
-    "website",  # BLIP calls screenshots "website"
-    # Abstract/synthetic patterns BLIP describes literally
+    "website",
+    # Abstract/synthetic patterns
     "gradient", "checkered", "grid pattern", "striped pattern",
     "blank sheet", "dots pattern",
-    # Digital-only qualifiers (not found in nature photos)
     "filled with various colors", "filled with different colors",
     "colorful geometric",
 ]
-# Keywords that indicate digital ONLY when the caption has NO camera indicators
 DIGITAL_BACKGROUND_KEYWORDS = [
-    "background with a black border",
-    "background with a white border",
-    "solid background",
-    "plain background",
-    "background with the words",  # text-on-background = digital
-    "colorful circle",  # abstract shapes = digital
+    "background with a black border", "background with a white border",
+    "solid background", "plain background",
+    "background with the words", "colorful circle",
 ]
 CAMERA_INDICATORS = [
     "man ", "woman ", "person ", "people ", "child ", "dog ", "cat ",
@@ -143,42 +157,24 @@ CAMERA_INDICATORS = [
 ]
 
 def classify_camera_digital(blip_caption):
-    """Determine if an image is a camera photo or digital/screenshot using BLIP caption.
-    
-    Two-tier classification:
-    1. Explicit digital keywords → digital
-    2. Background/abstract keywords AND no camera indicators → digital
-    3. Everything else → camera
-    
-    Uses word-boundary matching to avoid substring false positives.
-    """
     lower = blip_caption.lower()
     words = lower.split()
-    
-    # Tier 1: explicit digital keywords (multi-word phrases checked in full caption)
     for kw in DIGITAL_KEYWORDS:
         if kw in lower:
-            # For single-word keywords, verify word boundary to avoid substring matches
             if ' ' in kw:
-                # Multi-word phrase — substring match is fine
                 return "🖥️ Digital / Screenshot"
             else:
-                # Single word — check it appears as a whole word
                 if kw in words:
                     return "🖥️ Digital / Screenshot"
-    
-    # Tier 2: abstract background indicators WITHOUT camera cues
     has_camera_indicator = any(ci in lower for ci in CAMERA_INDICATORS)
     if not has_camera_indicator:
         if any(kw in lower for kw in DIGITAL_BACKGROUND_KEYWORDS):
             return "🖥️ Digital / Screenshot"
-        # Catch captions that are purely about backgrounds/colors with no real objects
         if "background" in lower and not any(
             obj in words for obj in ["mug", "bottle", "phone", "book", "chair", "table",
                                       "person", "people", "man", "woman", "child", "animal"]
         ):
             return "🖥️ Digital / Screenshot"
-    
     return "📷 Camera Photo"
 
 def analyze_metadata(image_path):
@@ -191,14 +187,10 @@ def analyze_metadata(image_path):
     gray = img.convert('L')
     px = list(gray.getdata())
     avg_brightness = sum(px) / len(px)
-    
     return {
-        "dimensions": f"{w}x{h}",
-        "ratio": round(ratio, 2),
-        "file_size_kb": kb,
-        "mode": img.mode,
-        "avg_brightness": round(avg_brightness),
-        "is_dark": avg_brightness < 60,
+        "dimensions": f"{w}x{h}", "ratio": round(ratio, 2),
+        "file_size_kb": kb, "mode": img.mode,
+        "avg_brightness": round(avg_brightness), "is_dark": avg_brightness < 60,
     }
 
 # ═══════════════════════════════════════════════════════════
@@ -207,11 +199,11 @@ def analyze_metadata(image_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='100% Local Image Analysis (OCR + Vision)')
     parser.add_argument('image', help='Path to image file')
-    parser.add_argument('--ocr', default='doctr',
-                       choices=['doctr', 'easyocr', 'all', 'none'],
-                       help='OCR engine (default: doctr)')
+    parser.add_argument('--ocr', default='doctr', choices=['doctr', 'easyocr', 'all', 'none'])
     parser.add_argument('--no-ocr', action='store_true', help='Skip OCR entirely')
     parser.add_argument('--no-vision', action='store_true', help='Skip BLIP captioning')
+    parser.add_argument('--drive', default=None, help='Storage drive (e.g., D:, E:, /mnt/data). Auto-detected if not set.')
+    parser.add_argument('--force-cpu', action='store_true', help='Disable GPU even if available')
     args = parser.parse_args()
 
     image_path = args.image
@@ -219,14 +211,21 @@ if __name__ == '__main__':
         print(f"Error: File not found: {image_path}")
         sys.exit(1)
 
+    # ── Set up environment ──
+    drive = args.drive if args.drive else get_storage_drive(auto=True)
+    config = setup_environment(drive)
+    has_gpu, device, gpu_name = gpu_available()
+
     do_ocr = not args.no_ocr
     do_vision = not args.no_vision
     if args.ocr == 'none':
         do_ocr = False
 
     print("=" * 70)
-    print(f"  \U0001F4F7 {os.path.basename(image_path)}")
-    print(f"  \U0001F3E0 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print(f"  📷 {os.path.basename(image_path)}")
+    print(f"  🏠 100% LOCAL — zero API calls, zero rate limits, zero cost")
+    print(f"  💾 Storage: {config['drive']}")
+    print(f"  🖥️  GPU: {gpu_info_str()}")
     print("=" * 70)
 
     # ── Metadata ──
@@ -243,13 +242,12 @@ if __name__ == '__main__':
             r = run_blip(image_path)
             print(f"done ({r['time_seconds']}s)")
             results['blip'] = r
-            # Classify camera vs digital from BLIP caption
             img_type = classify_camera_digital(r['caption'])
             print(f"  📸 Type: {img_type}")
         except Exception as e:
             print(f"❌ {e}")
     else:
-        print()  # end the brightness line
+        print()
 
     # ── OCR ──
     if do_ocr:
@@ -257,8 +255,12 @@ if __name__ == '__main__':
         for eng in engines:
             print(f"  🔍 [{eng}]...", end=" ", flush=True)
             try:
-                r = run_doctr(image_path) if eng == 'doctr' else run_easyocr(image_path)
-                print(f"{r['word_count']} words ({r['avg_confidence']:.0%} conf) in {r['time_seconds']}s")
+                if eng == 'doctr':
+                    r = run_doctr(image_path, force_cpu=args.force_cpu)
+                else:
+                    r = run_easyocr(image_path, force_cpu=args.force_cpu)
+                gpu_tag = f" [GPU]" if r.get('device') != 'cpu' else ""
+                print(f"{r['word_count']} words ({r['avg_confidence']:.0%} conf) in {r['time_seconds']}s{gpu_tag}")
                 results[eng] = r
             except Exception as e:
                 print(f"❌ {e}")
@@ -270,12 +272,10 @@ if __name__ == '__main__':
     print("                   ANALYSIS REPORT")
     print(f"{'=' * 70}")
 
-    # BLIP caption
     if 'blip' in results:
         print(f"\n  ── What's in this image? (BLIP) ──")
-        print(f"  \U0001F4DD {results['blip']['caption']}")
+        print(f"  📝 {results['blip']['caption']}")
 
-    # OCR text
     for eng in ['doctr', 'easyocr']:
         if eng not in results:
             continue
@@ -291,7 +291,6 @@ if __name__ == '__main__':
         else:
             print(f"  (no text detected)")
 
-    # Comparison
     if 'doctr' in results and 'easyocr' in results:
         d, e = results['doctr'], results['easyocr']
         print(f"\n  ── OCR Comparison ──")
