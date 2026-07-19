@@ -54,6 +54,7 @@ class LLaVAEngine:
                 device_map="auto",
                 torch_dtype=torch.float16,
                 cache_dir=self.cache_dir,
+                local_files_only=False,
             )
         else:
             self.model = LlavaForConditionalGeneration.from_pretrained(
@@ -61,11 +62,13 @@ class LLaVAEngine:
                 device_map="auto",
                 torch_dtype=torch.float16,
                 cache_dir=self.cache_dir,
+                local_files_only=False,
             )
         
         self.processor = AutoProcessor.from_pretrained(
             "llava-hf/llava-1.5-7b-hf",
             cache_dir=self.cache_dir,
+            local_files_only=False,
         )
         
         self._loaded = True

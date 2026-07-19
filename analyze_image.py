@@ -2,24 +2,21 @@
 """
 Image Analysis — 100% LOCAL Pipeline (Zero API Calls)
 =====================================================
-OCR:      DocTR (primary) + EasyOCR (backup)
-Vision:   BLIP image captioning
+Vision:   LLaVA-1.5-7B (4-bit GPU, ~3.8GB VRAM)
+OCR:      DocTR (primary) + EasyOCR (backup, GPU auto-detect)
+Analysis: Pixel colors + MAX classifier (34 dims, 11.5M keywords)
 =====================================================
 
 Usage:
-  python analyze_image.py <image_path>                # Full analysis (OCR + caption)
+  python analyze_image.py <image_path>                # Full analysis (LLaVA + OCR)
   python analyze_image.py <image_path> --ocr all       # Compare DocTR vs EasyOCR
   python analyze_image.py <image_path> --no-vision     # OCR only
-  python analyze_image.py <image_path> --no-ocr        # Vision caption only
+  python analyze_image.py <image_path> --no-ocr        # Vision only
+  python analyze_image.py <image_path> --drive D:      # Override storage drive
+  python analyze_image.py <image_path> --force-cpu     # Disable GPU
 
-Requirements (all local, no internet after first model download):
-  - DocTR:  ~100MB models (auto-downloaded on first run)
-  - EasyOCR: ~100MB models (auto-downloaded on first run)
-  - BLIP:    ~1GB model  (auto-downloaded on first run)
-
-Storage: Automatically detects available drives (avoids C: on Windows).
-         Set --drive to override (e.g., --drive D:).
-GPU: Auto-detects CUDA/MPS. Use --force-cpu to disable.
+Storage: Auto-detects available drives (avoids C: on Windows).
+GPU: Required for LLaVA (RTX 3060 12GB tested, 3.8GB VRAM usage).
 """
 import sys, os, time, argparse
 
@@ -101,18 +98,20 @@ def run_easyocr(image_path, force_cpu=False):
     }
 
 # ═══════════════════════════════════════════════════════════
-# ENGINE 3: BLIP — local image captioning
+# VISION ENGINE: LLaVA-1.5-7B (4-bit GPU)
 # ═══════════════════════════════════════════════════════════
-_blip_processor = None
-_blip_model = None
 
-def _load_blip():
-    global _blip_processor, _blip_model
-    if _blip_model is None:
-        from transformers import BlipProcessor, BlipForConditionalGeneration
-        _blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        _blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
-    return _blip_processor, _blip_model
+def run_llava(image_path, detail="rich"):
+    """Run LLaVA vision model for detailed image descriptions."""
+    from llava_engine import get_llava
+    engine = get_llava()
+    result = engine.describe(image_path, detail=detail)
+    return {
+        "engine": "LLaVA-1.5-7B (4-bit GPU)",
+        "caption": result['description'],
+        "time_seconds": result['time_seconds'],
+        "vram_gb": result.get('vram_gb', 0),
+    }
 
 def _load_image_safely(image_path):
     """Load image, handling LA/RGBA alpha channels properly.
@@ -147,123 +146,6 @@ def _load_image_safely(image_path):
     else:
         return img.convert('RGB')
 
-
-def run_blip(image_path, enhanced=True):
-    """
-    Run BLIP captioning. When enhanced=True, runs both unconditional
-    and conditional generation, merging the best details from both.
-    """
-    processor, model = _load_blip()
-    t0 = time.time()
-    img = _load_image_safely(image_path)
-    
-    # Always get the unconditional caption (has specific details)
-    inputs = processor(img, return_tensors="pt")
-    out = model.generate(**inputs, max_new_tokens=100)
-    base_caption = processor.decode(out[0], skip_special_tokens=True)
-    
-    if enhanced:
-        # Also try conditional generation for richer context
-        prompts = [
-            "a picture of",  # BLIP's official training prompt
-            "this is a picture of",
-            "the image shows",
-        ]
-        
-        best_conditional = ""
-        for prompt in prompts:
-            try:
-                inputs = processor(img, text=prompt, return_tensors="pt")
-                out = model.generate(**inputs, max_new_tokens=120, num_beams=3,
-                                    early_stopping=True)
-                caption = processor.decode(out[0], skip_special_tokens=True)
-                if len(caption) > len(best_conditional):
-                    best_conditional = caption
-            except:
-                pass
-        
-        # Merge: use conditional for context, mention unconditional details naturally
-        if best_conditional and len(best_conditional) > 20:
-            # Extract meaningful unique words from unconditional
-            base_words = set(base_caption.lower().split())
-            cond_words = set(best_conditional.lower().split())
-            unique = base_words - cond_words
-            skip_words = {'a', 'an', 'the', 'is', 'of', 'in', 'on', 'at', 'to', 
-                         'with', 'and', 'or', 'this', 'that', 'it', 'its', 'are',
-                         'was', 'were', 'be', 'has', 'have', 'for', 'by', 'from'}
-            meaningful = sorted(unique - skip_words)
-            
-            if meaningful:
-                # Pick top 3 most impactful words
-                top_words = meaningful[:3]
-                if len(top_words) == 1:
-                    caption = f"{best_conditional}, featuring {top_words[0]}"
-                elif len(top_words) == 2:
-                    caption = f"{best_conditional}, showing {top_words[0]} and {top_words[1]}"
-                else:
-                    caption = f"{best_conditional}, with {top_words[0]}, {top_words[1]}, and {top_words[2]}"
-            else:
-                caption = best_conditional
-        else:
-            caption = base_caption
-    else:
-        caption = base_caption
-    
-    elapsed = time.time() - t0
-    return {
-        "engine": "BLIP (Salesforce/blip-image-captioning-base)",
-        "caption": caption,
-        "time_seconds": round(elapsed, 2)
-    }
-
-# ═══════════════════════════════════════════════════════════
-# Camera vs Digital Detection (BLIP caption keyword matching)
-# ═══════════════════════════════════════════════════════════
-DIGITAL_KEYWORDS = [
-    # Explicitly digital/synthetic content
-    "painting", "painted", "illustration", "artwork", "drawing", "cartoon",
-    "product label", "advertisement", "screenshot", "graphic",
-    "logo", "circuit", "chip", "microchip", "user interface", "ui",
-    "poster", "banner", "sign", "menu", "diagram", "chart",
-    "website",
-    # Abstract/synthetic patterns
-    "gradient", "checkered", "grid pattern", "striped pattern",
-    "blank sheet", "dots pattern",
-    "filled with various colors", "filled with different colors",
-    "colorful geometric",
-]
-DIGITAL_BACKGROUND_KEYWORDS = [
-    "background with a black border", "background with a white border",
-    "solid background", "plain background",
-    "background with the words", "colorful circle",
-]
-CAMERA_INDICATORS = [
-    "man ", "woman ", "person ", "people ", "child ", "dog ", "cat ",
-    "standing", "walking", "sitting", "looking at", "field of",
-    "mountains", "river", "ocean", "beach", "forest", "sky",
-    "building", "street", "car ", "tree", "flower", "bird",
-]
-
-def classify_camera_digital(blip_caption):
-    lower = blip_caption.lower()
-    words = lower.split()
-    for kw in DIGITAL_KEYWORDS:
-        if kw in lower:
-            if ' ' in kw:
-                return "🖥️ Digital / Screenshot"
-            else:
-                if kw in words:
-                    return "🖥️ Digital / Screenshot"
-    has_camera_indicator = any(ci in lower for ci in CAMERA_INDICATORS)
-    if not has_camera_indicator:
-        if any(kw in lower for kw in DIGITAL_BACKGROUND_KEYWORDS):
-            return "🖥️ Digital / Screenshot"
-        if "background" in lower and not any(
-            obj in words for obj in ["mug", "bottle", "phone", "book", "chair", "table",
-                                      "person", "people", "man", "woman", "child", "animal"]
-        ):
-            return "🖥️ Digital / Screenshot"
-    return "📷 Camera Photo"
 
 def analyze_metadata(image_path):
     from PIL import Image
@@ -465,20 +347,13 @@ if __name__ == '__main__':
 
     results = {}
 
-    # ── BLIP Vision ──
+    # ── LLaVA Vision ──
     if do_vision:
-        print(f"\n  🧠 BLIP caption...", end=" ", flush=True)
+        print(f"\n  🧠 LLaVA description...", end=" ", flush=True)
         try:
-            r = run_blip(image_path)
-            print(f"done ({r['time_seconds']}s)")
-            results['blip'] = r
-            # Use MAX classifier for camera/digital (34 dimensions, space-aware)
-            try:
-                from max_classifier import classify_camera_digital as max_cd
-                img_type = "🖥️ Digital / Screenshot" if max_cd(r['caption']) == "digital" else "📷 Camera Photo"
-            except ImportError:
-                img_type = classify_camera_digital(r['caption'])
-            print(f"  📸 Type: {img_type}")
+            r = run_llava(image_path)
+            print(f"done ({r['time_seconds']}s, {r.get('vram_gb',0):.1f}GB VRAM)")
+            results['vision'] = r
         except Exception as e:
             print(f"❌ {e}")
     else:
@@ -507,23 +382,26 @@ if __name__ == '__main__':
     print("                   ANALYSIS REPORT")
     print(f"{'=' * 70}")
 
-    if 'blip' in results:
-        print(f"\n  ── What's in this image? (BLIP) ──")
-        print(f"  📝 {results['blip']['caption']}")
+    if 'vision' in results:
+        print(f"\n  ── LLaVA Description ──")
+        caption = results['vision']['caption']
+        # Truncate very long descriptions for display
+        if len(caption) > 800:
+            caption = caption[:800] + "..."
+        print(f"  📝 {caption}")
         
-        # ── Detailed description (BLIP + MAX classifier) ──
+        # Detailed structured description
         try:
             from max_classifier import classify_image
             from describe_engine import generate_detailed_description
-            labels = classify_image(results['blip']['caption'])
-            detailed = generate_detailed_description(results['blip']['caption'], labels, meta)
-            print(f"\n  ── Detailed Description ──")
-            # Word-wrap the detailed description
+            labels = classify_image(caption)
+            detailed = generate_detailed_description(caption, labels, meta)
+            print(f"\n  ── Structured Summary ──")
             import textwrap
             for line in textwrap.wrap(detailed, width=65):
                 print(f"  {line}")
         except ImportError:
-            pass  # max_classifier not available — skip detailed description
+            pass
 
     for eng in ['doctr', 'easyocr']:
         if eng not in results:
