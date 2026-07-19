@@ -90,6 +90,7 @@ class LLaVAEngine:
         
         self._loaded = True
         vram = torch.cuda.memory_allocated(0) / 1024**3 if torch.cuda.is_available() else 0
+        self._device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"done ({time.time()-t0:.1f}s, {vram:.1f}GB VRAM)")
     
     def unload(self):
@@ -156,10 +157,9 @@ class LLaVAEngine:
             ),
         }
         
-        prompt = prompts.get(detail, detail)  # detail can be a custom prompt string
-        
+        prompt = prompts.get(detail, detail)
         img = self._load_image(image_path)
-        inputs = self.processor(text=prompt, images=img, return_tensors="pt").to("cuda")
+        inputs = self.processor(text=prompt, images=img, return_tensors="pt").to(self._device)
         
         t0 = time.time()
         with torch.no_grad():
@@ -193,7 +193,7 @@ class LLaVAEngine:
         
         prompt = f"USER: <image>\n{question}\nASSISTANT:"
         img = self._load_image(image_path)
-        inputs = self.processor(text=prompt, images=img, return_tensors="pt").to("cuda")
+        inputs = self.processor(text=prompt, images=img, return_tensors="pt").to(self._device)
         
         t0 = time.time()
         with torch.no_grad():
@@ -222,6 +222,13 @@ def get_llava():
     if _llava_instance is None:
         _llava_instance = LLaVAEngine()
     return _llava_instance
+
+def release_llava():
+    """Release the global LLaVA engine to free VRAM."""
+    global _llava_instance
+    if _llava_instance:
+        _llava_instance.unload()
+        _llava_instance = None
 
 
 # ═══════════════════════════════════════════════════════════

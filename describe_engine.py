@@ -68,10 +68,16 @@ def generate_detailed_description(blip_caption, labels=None, metadata=None):
     p1_parts.append(caption)
     
     # Source type
-    if source in ('digital_abstract', 'painting', 'illustration', 'drawing', 'diagram'):
+    if source in ('digital_abstract', 'diagram'):
         p1_parts.append("This is a digitally created or computer-generated composition.")
     elif source == 'screenshot':
         p1_parts.append("This appears to be a screenshot or digital interface capture.")
+    elif source == 'painting':
+        p1_parts.append("This is a painting, executed in traditional or digital media.")
+    elif source == 'illustration':
+        p1_parts.append("This is an illustration or graphic artwork.")
+    elif source == 'drawing':
+        p1_parts.append("This appears to be a drawing, sketch, or hand-rendered artwork.")
     elif source == 'map':
         p1_parts.append("This is a map or cartographic representation.")
     

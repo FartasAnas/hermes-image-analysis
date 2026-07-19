@@ -38,8 +38,12 @@ def run_doctr(image_path, force_cpu=False):
     has_gpu, device, _ = gpu_available()
     if force_cpu:
         has_gpu = False
+        device = "cpu"
     
     model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
+    if has_gpu:
+        model = model.cuda()
+    
     doc = DocumentFile.from_images(image_path)
     result = model(doc)
     elapsed = time.time() - t0
@@ -396,6 +400,17 @@ if __name__ == '__main__':
             from describe_engine import generate_detailed_description
             labels = classify_image(caption)
             detailed = generate_detailed_description(caption, labels, meta)
+            
+            # Pixel analysis for color/motion details
+            try:
+                from pixel_analysis import analyze_pixels, pixel_analysis_to_text
+                pixel = analyze_pixels(image_path)
+                pixel_txt = pixel_analysis_to_text(pixel)
+                print(f"\n  ── Pixel Analysis ──")
+                for line in textwrap.wrap(pixel_txt, width=65):
+                    print(f"  {line}")
+            except ImportError:
+                pass
             print(f"\n  ── Structured Summary ──")
             import textwrap
             for line in textwrap.wrap(detailed, width=65):
