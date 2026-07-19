@@ -114,14 +114,13 @@ def print_engine_recommendation():
     """Print a user-friendly engine recommendation (for Hermes to display)."""
     recommended, reason = detect_best_engine()
     has_gpu = _has_gpu()
-    gpu_name, vram_gb = _get_gpu_info()
     
     print("\n" + "=" * 60)
     print("  🖥️  VISION ENGINE SELECTION")
     print("=" * 60)
     
     if has_gpu:
-        print(f"  ✅ GPU detected: {gpu_name} ({vram_gb}GB VRAM)")
+        print(f"  ✅ CUDA GPU detected")
         print()
         print(f"  📌 Recommended: LLaVA-1.5-7B (4-bit)")
         print(f"     • Rich, detailed multi-paragraph descriptions")
@@ -131,9 +130,9 @@ def print_engine_recommendation():
         print(f"  ⚡ Alternative: BLIP-base")
         print(f"     • Fast, short captions (5-15 words)")
         print(f"     • Works on CPU, ~1GB model, 0.8s per image")
-        print(f"     • Good for: quick scanning, OCR-focused workflows, low-resource machines")
+        print(f"     • Good for: quick scanning, OCR-focused workloads, low-resource machines")
     else:
-        print(f"  ⚠️  No compatible GPU detected")
+        print(f"  ⚠️  No CUDA GPU detected")
         print()
         print(f"  📌 Recommended: BLIP-base")
         print(f"     • Fast, short captions (5-15 words)")
