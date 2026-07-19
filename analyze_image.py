@@ -165,8 +165,8 @@ def run_blip(image_path, enhanced=True):
     if enhanced:
         # Also try conditional generation for richer context
         prompts = [
+            "a picture of",  # BLIP's official training prompt
             "this is a picture of",
-            "a detailed view of",
             "the image shows",
         ]
         
@@ -182,17 +182,26 @@ def run_blip(image_path, enhanced=True):
             except:
                 pass
         
-        # Merge: use conditional for context, mention unconditional details
+        # Merge: use conditional for context, mention unconditional details naturally
         if best_conditional and len(best_conditional) > 20:
-            # Extract unique words from unconditional that aren't in conditional
+            # Extract meaningful unique words from unconditional
             base_words = set(base_caption.lower().split())
             cond_words = set(best_conditional.lower().split())
-            unique_details = base_words - cond_words
-            # Filter to meaningful content words (nouns, adjectives)
-            skip_words = {'a', 'an', 'the', 'is', 'of', 'in', 'on', 'at', 'to', 'with', 'and', 'or', 'this', 'that', 'it'}
-            meaningful = unique_details - skip_words
+            unique = base_words - cond_words
+            skip_words = {'a', 'an', 'the', 'is', 'of', 'in', 'on', 'at', 'to', 
+                         'with', 'and', 'or', 'this', 'that', 'it', 'its', 'are',
+                         'was', 'were', 'be', 'has', 'have', 'for', 'by', 'from'}
+            meaningful = sorted(unique - skip_words)
+            
             if meaningful:
-                caption = f"{best_conditional} with {', '.join(sorted(meaningful)[:5])}"
+                # Pick top 3 most impactful words
+                top_words = meaningful[:3]
+                if len(top_words) == 1:
+                    caption = f"{best_conditional}, featuring {top_words[0]}"
+                elif len(top_words) == 2:
+                    caption = f"{best_conditional}, showing {top_words[0]} and {top_words[1]}"
+                else:
+                    caption = f"{best_conditional}, with {top_words[0]}, {top_words[1]}, and {top_words[2]}"
             else:
                 caption = best_conditional
         else:
@@ -463,7 +472,12 @@ if __name__ == '__main__':
             r = run_blip(image_path)
             print(f"done ({r['time_seconds']}s)")
             results['blip'] = r
-            img_type = classify_camera_digital(r['caption'])
+            # Use MAX classifier for camera/digital (34 dimensions, space-aware)
+            try:
+                from max_classifier import classify_camera_digital as max_cd
+                img_type = "🖥️ Digital / Screenshot" if max_cd(r['caption']) == "digital" else "📷 Camera Photo"
+            except ImportError:
+                img_type = classify_camera_digital(r['caption'])
             print(f"  📸 Type: {img_type}")
         except Exception as e:
             print(f"❌ {e}")
@@ -500,6 +514,7 @@ if __name__ == '__main__':
         # ── Detailed description (BLIP + MAX classifier) ──
         try:
             from max_classifier import classify_image
+            from describe_engine import generate_detailed_description
             labels = classify_image(results['blip']['caption'])
             detailed = generate_detailed_description(results['blip']['caption'], labels, meta)
             print(f"\n  ── Detailed Description ──")
