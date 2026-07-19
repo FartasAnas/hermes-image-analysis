@@ -2,21 +2,26 @@
 """
 Image Analysis — 100% LOCAL Pipeline (Zero API Calls)
 =====================================================
-Vision:   LLaVA-1.5-7B (4-bit GPU, ~3.8GB VRAM)
+Vision (choose one):
+  LLaVA-1.5-7B (4-bit GPU) — rich multi-paragraph descriptions, ~4GB VRAM
+  BLIP-base               — fast short captions, works on CPU, ~1GB model
 OCR:      DocTR (primary) + EasyOCR (backup, GPU auto-detect)
 Analysis: Pixel colors + MAX classifier (34 dims, 11.5M keywords)
 =====================================================
 
 Usage:
-  python analyze_image.py <image_path>                # Full analysis (LLaVA + OCR)
-  python analyze_image.py <image_path> --ocr all       # Compare DocTR vs EasyOCR
-  python analyze_image.py <image_path> --no-vision     # OCR only
-  python analyze_image.py <image_path> --no-ocr        # Vision only
-  python analyze_image.py <image_path> --drive D:      # Override storage drive
-  python analyze_image.py <image_path> --force-cpu     # Disable GPU
+  python analyze_image.py <image_path>                    # Auto engine (config or GPU detect)
+  python analyze_image.py <image_path> --engine llava     # Force LLaVA
+  python analyze_image.py <image_path> --engine blip      # Force BLIP (CPU-friendly)
+  python analyze_image.py <image_path> --ocr all           # Compare DocTR vs EasyOCR
+  python analyze_image.py <image_path> --no-vision         # OCR only
+  python analyze_image.py <image_path> --no-ocr            # Vision only
+  python analyze_image.py <image_path> --drive D:          # Override storage drive
+  python analyze_image.py <image_path> --force-cpu         # Disable GPU
+  python analyze_image.py --show-engines                   # Show GPU and recommendation
 
 Storage: Auto-detects available drives (avoids C: on Windows).
-GPU: Required for LLaVA (RTX 3060 12GB tested, 3.8GB VRAM usage).
+GPU: LLaVA needs 6GB+ VRAM. BLIP works on CPU.
 """
 import sys, os, time, argparse
 
@@ -102,7 +107,7 @@ def run_easyocr(image_path, force_cpu=False):
     }
 
 # ═══════════════════════════════════════════════════════════
-# VISION ENGINE: LLaVA-1.5-7B (4-bit GPU)
+# VISION ENGINE: LLaVA-1.5-7B (4-bit GPU) or BLIP-base (CPU)
 # ═══════════════════════════════════════════════════════════
 
 def run_llava(image_path, detail="rich"):
@@ -116,6 +121,47 @@ def run_llava(image_path, detail="rich"):
         "time_seconds": result['time_seconds'],
         "vram_gb": result.get('vram_gb', 0),
     }
+
+def run_blip(image_path):
+    """Run BLIP-base for fast short captions. Works on CPU."""
+    from PIL import Image
+    from transformers import BlipProcessor, BlipForConditionalGeneration
+    import torch as _torch
+    
+    t0 = time.time()
+    img = _load_image_safely(image_path)
+    
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+    
+    # Use GPU if available for BLIP too
+    device = "cuda" if _torch.cuda.is_available() else "cpu"
+    model = model.to(device)
+    inputs = processor(img, text="a picture of", return_tensors="pt").to(device)
+    
+    with _torch.no_grad():
+        out = model.generate(**inputs, max_new_tokens=100, num_beams=3)
+    
+    caption = processor.decode(out[0], skip_special_tokens=True)
+    elapsed = time.time() - t0
+    
+    return {
+        "engine": "BLIP-base (Salesforce/blip-image-captioning-base)",
+        "caption": caption,
+        "time_seconds": round(elapsed, 2),
+        "vram_gb": round(_torch.cuda.memory_allocated(0) / 1024**3, 2) if device == "cuda" else 0,
+    }
+
+def run_vision(image_path, engine="auto"):
+    """Run the selected vision engine. Engine: 'llava', 'blip', or 'auto'."""
+    from engine_config import get_engine_choice
+    
+    choice = get_engine_choice(force=engine if engine != "auto" else None)
+    
+    if choice == "llava":
+        return run_llava(image_path)
+    else:
+        return run_blip(image_path)
 
 def _load_image_safely(image_path):
     """Load image, handling LA/RGBA alpha channels properly.
@@ -314,14 +360,27 @@ def generate_detailed_description(blip_caption, labels=None, metadata=None):
 # ═══════════════════════════════════════════════════════════
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='100% Local Image Analysis (OCR + Vision)')
-    parser.add_argument('image', help='Path to image file')
+    parser.add_argument('image', nargs='?', help='Path to image file')
     parser.add_argument('--ocr', default='doctr', choices=['doctr', 'easyocr', 'all', 'none'])
     parser.add_argument('--no-ocr', action='store_true', help='Skip OCR entirely')
-    parser.add_argument('--no-vision', action='store_true', help='Skip BLIP captioning')
+    parser.add_argument('--no-vision', action='store_true', help='Skip vision/captioning')
+    parser.add_argument('--engine', default='auto', choices=['auto', 'llava', 'blip'],
+                       help='Vision engine: llava (rich), blip (fast), auto (detect)')
+    parser.add_argument('--show-engines', action='store_true',
+                       help='Show GPU info and engine recommendation, then exit')
     parser.add_argument('--drive', default=None, help='Storage drive (e.g., D:, E:, /mnt/data). Auto-detected if not set.')
     parser.add_argument('--force-cpu', action='store_true', help='Disable GPU even if available')
     args = parser.parse_args()
-
+    
+    # --show-engines: display recommendation and exit
+    if args.show_engines:
+        from engine_config import print_engine_recommendation
+        print_engine_recommendation()
+        sys.exit(0)
+    
+    if not args.image:
+        parser.error("image path required (or use --show-engines)")
+    
     image_path = args.image
     if not os.path.exists(image_path):
         print(f"Error: File not found: {image_path}")
@@ -351,11 +410,12 @@ if __name__ == '__main__':
 
     results = {}
 
-    # ── LLaVA Vision ──
+    # ── LLaVA / BLIP Vision ──
     if do_vision:
-        print(f"\n  🧠 LLaVA description...", end=" ", flush=True)
+        engine_name = args.engine if hasattr(args, 'engine') else 'auto'
+        print(f"\n  🧠 Vision ({engine_name})...", end=" ", flush=True)
         try:
-            r = run_llava(image_path)
+            r = run_vision(image_path, engine=engine_name)
             print(f"done ({r['time_seconds']}s, {r.get('vram_gb',0):.1f}GB VRAM)")
             results['vision'] = r
         except Exception as e:
