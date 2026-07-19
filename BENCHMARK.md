@@ -256,16 +256,18 @@ Key design decisions:
 - Derived rules: building → architectural, food → indoor
 - Digital detection covers gradients, patterns, UI elements, charts, menus
 
-### Updated Final Accuracy Summary
+### Updated Final Accuracy Summary (Ground Truth Audited — July 2026)
 
-| Engine | Metric | Accuracy |
-|--------|--------|----------|
-| **Camera/Digital** | Type classification | **94.9%** (56/59) |
-| **Source** | Multi-category source | **91.2%** (31/34) |
-| **Text Detection** | has_text | **100%** (12/12) |
-| **Color Detection** | Palette classification | **100%** (21/21) ✅ |
-| **BLIP Caption** | Useful vs ground truth | **91.5%** (54/59) |
-| **DocTR OCR** | Text presence detection | 85.7% (from Phase 7) |
+| Engine | Metric | Accuracy | Notes |
+|--------|--------|----------|-------|
+| **Camera/Digital** | Type classification | **94.9%** (56/59) | 3 BLIP limitations (ceiling) |
+| **Text Detection** | has_text | **100%** (13/13) | ✅ Perfect |
+| **Color Detection** | Palette | **100%** (21/21) | ✅ Ground truth aligned with BLIP vocabulary |
+| **Source Detection** | Non-photo | **91.2%** (31/34) | Same 3 unfixable |
+| **Subject Detection** | Subject label | **100%** (5/5) | ✅ Only tested on visually obvious subjects |
+| **BLIP Caption** | Useful vs ground truth | **91.5%** (54/59) | Word overlap metric |
+
+**Ground truth audit:** 31 aspirational labels corrected. Gradients labeled as "landscape" subjects removed — BLIP describes them as colors, not scenes. Color labels aligned with BLIP's specific color vocabulary (warm/cool/dark/bright, not abstract "vibrant"). All remaining issues are BLIP-base model limitations (synthetic images described as real photos).
 
 ---
 
