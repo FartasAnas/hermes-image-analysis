@@ -131,8 +131,12 @@ def run_blip(image_path):
     t0 = time.time()
     img = _load_image_safely(image_path)
     
-    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+    # Use correct HF cache path
+    cache_dir = os.environ.get('HF_HOME', None)
+    kwargs = {'cache_dir': cache_dir} if cache_dir else {}
+    
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
+    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", **kwargs)
     
     # Use GPU if available for BLIP too
     device = "cuda" if _torch.cuda.is_available() else "cpu"
