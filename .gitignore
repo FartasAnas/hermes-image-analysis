@@ -5,3 +5,4 @@ temp/
 *.key
 .env
 engine_preference.json
+.hermes_session
